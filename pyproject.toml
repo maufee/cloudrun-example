@@ -10,3 +10,16 @@ requires-python = ">=3.13"
 [build-system]
 requires = ["setuptools>=61.0"]
 build-backend = "setuptools.build_meta"
+
+[tool.ruff]
+# Basic ruff configuration used by CI and local linting
+line-length = 88
+exclude = [".venv", "build", "dist", "__pycache__"]
+select = ["E", "F", "W", "C90", "B", "RUF"]
+
+# Optional/dev dependencies for local development (used by uv)
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.0",
+    "ruff>=0.12.0",
+]

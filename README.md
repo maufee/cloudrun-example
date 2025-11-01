@@ -14,30 +14,28 @@ Quick overview
 - Main app: `app.py` (Flask application instance `app`)
 - Start command (Cloud Run / production): `gunicorn --bind :$PORT --workers 1 --threads 8 app:app` (see `Procfile`)
 
-Quick start (development)
+Local development (use uv)
 
-Prerequisites:
-- Python 3.11+ (this project targets 3.13)
-- Recommended: install `uv` for dependency management; fallback to `pip` + `venv` if you prefer.
+This repository uses `uv` as the authoritative local dependency manager. Always use `uv` for creating the virtual environment and installing development tools and dependencies to ensure parity across developer machines.
 
-Using uv (recommended):
+Recommended local workflow:
 ```bash
-# create a venv managed by uv
-uv venv
-# activate it
+# create a uv-managed virtual environment (uses python3)
+python3 -m uv venv
+# activate the venv
 source .venv/bin/activate
-# install runtime deps from pyproject.toml (or requirements.txt if you prefer)
-uv pip sync
-# run dev server
+# install runtime deps and dev extras from pyproject.toml
+uv pip sync --extra dev
+# run the dev server
 python app.py
 ```
 
-Fallback using standard venv and pip:
+Run tests and lint locally (after activating .venv):
 ```bash
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-python app.py
+# run ruff linter
+ruff check .
+# run pytest
+pytest -q
 ```
 
 Local production run (Gunicorn):
@@ -46,6 +44,10 @@ Local production run (Gunicorn):
 # Run gunicorn on the same interface as Cloud Run uses
 gunicorn --bind 0.0.0.0:8080 --workers 1 --threads 8 app:app
 ```
+
+CI note
+- The GitHub Actions workflow uses the runner's Python environment and installs dependencies directly with `pip install -r requirements.txt` for speed and reproducibility in CI. Creating an additional virtual environment inside the runner (for example via `uv venv`) is unnecessary because Actions already provides an isolated Python environment per job.
+- `uv` is recommended for local developer workflows where you want `pyproject.toml` to be the single source of truth for dependencies; it's optional for CI unless you specifically want CI to mirror the developer `uv` workflow.
 
 Deploy to Google Cloud Run (source deploy)
 ```bash
