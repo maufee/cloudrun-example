@@ -20,8 +20,8 @@ This repository uses `uv` as the authoritative local dependency manager. Always 
 
 Recommended local workflow:
 ```bash
-# create a uv-managed virtual environment (uses python3)
-python3 -m uv venv
+# create a uv-managed virtual environment
+uv venv
 # activate the venv
 source .venv/bin/activate
 # install runtime deps and dev extras from pyproject.toml
