@@ -1,7 +1,6 @@
 # Python Flask Web App on Google Cloud Run
 
-[![license](https://img.shields.io/badge/license-MIT-blue.svg)](./LICENSE)  
-[![python](https://img.shields.io/badge/python-3.13-blue)](https://www.python.org/)
+[![python](https://img.shields.io/badge/python-%3E%3D3.13-blue)](https://www.python.org/)
 
 A minimal "Hello World" Flask application intended for deployment to Google Cloud Run using source deployment (Cloud Buildpacks).
 
@@ -51,19 +50,31 @@ This project uses `ruff` for linting and `pytest` for testing. Both are configur
 
 - **To run the tests**:
   ```bash
-  uv run pytest
+  uv run python -m pytest
   ```
 
-Local production run (Gunicorn):
-```bash
-# Ensure dependencies installed (requirements.txt)
-# Run gunicorn on the same interface as Cloud Run uses
-gunicorn --bind 0.0.0.0:8080 --workers 1 --threads 8 app:app
-```
+## Local Production Run (Gunicorn)
 
-CI note
-- The GitHub Actions workflow uses the runner's Python environment and installs dependencies directly with `pip install -r requirements.txt` for speed and reproducibility in CI. Creating an additional virtual environment inside the runner (for example via `uv venv`) is unnecessary because Actions already provides an isolated Python environment per job.
-- `uv` is recommended for local developer workflows where you want `pyproject.toml` to be the single source of truth for dependencies; it's optional for CI unless you specifically want CI to mirror the developer `uv` workflow.
+To run the application locally using Gunicorn (mimicking the production environment):
+
+1. **Ensure dependencies are installed** (as per "How to Run Locally" section).
+2. **Run Gunicorn**:
+   ```bash
+   uv run gunicorn --bind 0.0.0.0:8080 --workers 1 --threads 8 app:app
+   ```
+   The application will be available at `http://127.0.0.1:8080`.
+
+## CI Workflow
+
+This project includes a GitHub Actions workflow (`.github/workflows/ci.yml`) that automatically runs linting and tests on every push and pull request to the `main` branch.
+
+The CI workflow:
+- Checks out the code.
+- Sets up Python 3.13.
+- Installs `uv`.
+- Installs all project dependencies (including dev extras) using `uv pip sync pyproject.toml --all-extras`.
+- Runs `ruff` for linting.
+- Runs `pytest` for testing.
 
 Deploy to Google Cloud Run (source deploy)
 ```bash
