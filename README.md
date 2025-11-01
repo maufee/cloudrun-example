@@ -14,29 +14,45 @@ Quick overview
 - Main app: `app.py` (Flask application instance `app`)
 - Start command (Cloud Run / production): `gunicorn --bind :$PORT --workers 1 --threads 8 app:app` (see `Procfile`)
 
-Local development (use uv)
+## How to Run Locally
 
-This repository uses `uv` as the authoritative local dependency manager. Always use `uv` for creating the virtual environment and installing development tools and dependencies to ensure parity across developer machines.
+1. **Install `uv`**:
+   Follow the official instructions to install `uv`.
 
-Recommended local workflow:
-```bash
-# create a uv-managed virtual environment
-uv venv
-# activate the venv
-source .venv/bin/activate
-# install runtime deps and dev extras from pyproject.toml
-uv pip sync --extra dev
-# run the dev server
-python app.py
-```
+2. **Create a virtual environment**:
+   ```bash
+   uv venv
+   ```
 
-Run tests and lint locally (after activating .venv):
-```bash
-# run ruff linter
-ruff check .
-# run pytest
-pytest -q
-```
+3. **Activate the virtual environment**:
+   ```bash
+   source .venv/bin/activate
+   ```
+
+4. **Install dependencies**:
+   ```bash
+   uv pip sync --all-extras
+   ```
+
+5. **Run the development server**:
+   ```bash
+   uv run flask run
+   ```
+   The application will be available at `http://127.0.0.1:8080`.
+
+## Testing and Linting
+
+This project uses `ruff` for linting and `pytest` for testing. Both are configured as development dependencies.
+
+- **To run the linter**:
+  ```bash
+  uv run ruff check .
+  ```
+
+- **To run the tests**:
+  ```bash
+  uv run pytest
+  ```
 
 Local production run (Gunicorn):
 ```bash

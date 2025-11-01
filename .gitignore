@@ -24,3 +24,6 @@ Thumbs.db
 
 # Cloud Run specific
 .gcloudignore
+
+# Build artifacts
+cloudrun_example.egg-info/
