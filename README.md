@@ -57,6 +57,10 @@ Never run Flask applications with debug mode enabled in a production environment
 
 For more details, refer to the [Flask Debug Mode documentation](https://flask.palletsprojects.com/en/latest/server/#debug-mode).
 
+#### The Debugger PIN
+
+When you run the server in debug mode for the first time, you will see a "Debugger PIN" in your console output. If your application encounters an error, the interactive debugger will start in your browser. You will be prompted to enter this PIN to unlock the full interactive features. This is a security measure to prevent unauthorized users from executing code on your machine. This is another critical reason why debug mode must never be used in production.
+
 ## Testing and Linting
 
 This project uses `ruff` for linting and `pytest` for testing. Both are configured as development dependencies.
