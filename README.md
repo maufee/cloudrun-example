@@ -204,3 +204,15 @@ In short, it's the canonical and safest way to run an installed Python module, w
 **Further Reading:**
 - [Python Command Line Documentation: `-m` switch](https://docs.python.org/3/using/cmdline.html#cmdoption-m)
 - [PEP 338 -- Executing modules as scripts](https://peps.python.org/pep-0338/)
+
+### Q: How can I apply a timeout only to the test function, not setup/teardown?
+
+**A:** You can use the `timeout_func_only` configuration option. By default, `pytest-timeout` applies the timeout to the entire test item, including setup and teardown phases. Setting `timeout_func_only = true` is useful when you have a long-running setup fixture (e.g., initializing a database, preparing complex data) that you want to exclude from the test's execution time limit.
+
+To enable this, add the following to your `pyproject.toml`:
+
+```toml
+[tool.pytest.ini_options]
+timeout = "10"
+timeout_func_only = true
+```
