@@ -160,3 +160,20 @@ Contributing
 
 License
 This project is licensed under the MIT License - see the `LICENSE` file for details.
+
+---
+
+## Appendix: Architectural Choices FAQ
+
+### Q: Why use `uv run python -m pytest` instead of just `uv run pytest`?
+
+**A:** While `uv run pytest` often works, `uv run python -m pytest` is a more robust and explicit command that is guaranteed to work correctly across different developer machines and shell configurations.
+
+- **The `pytest` command** relies on the shell finding the `pytest` executable script in the `PATH`. This can sometimes fail due to shell caching, `PATH` conflicts from other tools, or a corrupted executable script.
+- **The `python -m pytest` command** directly uses the project's `python` interpreter to find and run the `pytest` module. This bypasses the shell's `PATH` search for the `pytest` script, instead using Python's own internal and more reliable module-finding mechanism.
+
+In short, it's the canonical and safest way to run an installed Python module, which is why it is the standard used in this project.
+
+**Further Reading:**
+- [Python Command Line Documentation: `-m` switch](https://docs.python.org/3/using/cmdline.html#cmdoption-m)
+- [PEP 338 -- Executing modules as scripts](https://peps.python.org/pep-0338/)
