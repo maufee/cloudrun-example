@@ -68,7 +68,7 @@ This project uses `ruff` for linting and `pytest` for testing. Both are configur
   uv run ruff check .
   ```
 
-- **To run the tests**:
+- **To run the tests** (without coverage):
   ```bash
   uv run python -m pytest
   ```
@@ -89,17 +89,14 @@ You can run specific tests by passing arguments to `pytest`:
 
 ### Test Coverage
 
-This project uses `pytest-cov` to measure code coverage by our tests. The minimum coverage threshold is configured centrally in `pyproject.toml` under the `[tool.coverage.report]` section and is enforced for both local and CI test runs.
+This project uses `pytest-cov` to measure code coverage. The coverage source (the `app` module) and the minimum coverage threshold (90%) are configured centrally in `pyproject.toml`.
 
-- **To generate a coverage report in the terminal**:
-  ```bash
-  uv run python -m pytest --cov=app
-  ```
+Unlike the default test run, running a coverage analysis is an explicit action.
 
-- **To run tests and enforce the minimum coverage percentage**:
-  This is now the default behavior. `pytest` will automatically fail if coverage drops below the threshold defined in `pyproject.toml` (e.g., 90%).
+- **To run tests and enforce coverage**:
+  Use the `--cov` flag. This will activate `pytest-cov`, which will then use the settings from `pyproject.toml` to measure coverage and fail if the threshold is not met.
   ```bash
-  uv run python -m pytest --cov=app
+  uv run python -m pytest --cov
   ```
 
 ### Test Timeout

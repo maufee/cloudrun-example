@@ -33,6 +33,6 @@ jobs:
         run: uv run ruff check .
 
       - name: Run tests with pytest and enforce coverage
-        run: uv run python -m pytest --cov=app
+        run: uv run python -m pytest --cov
 
       

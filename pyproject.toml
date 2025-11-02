@@ -30,5 +30,8 @@ select = ["E", "F", "W", "C90", "B", "RUF"]
 [tool.pytest.ini_options]
 timeout = "10"
 
+[tool.coverage.run]
+source = ["app"]
+
 [tool.coverage.report]
 fail_under = 90
