@@ -7,6 +7,7 @@ dependencies = [
     "pytest>=7.0",
     "ruff>=0.12.0",
     "pytest-cov",
+    "pytest-timeout",
 ]
 requires-python = ">=3.13"
 
@@ -21,3 +22,6 @@ exclude = [".venv", "build", "dist", "__pycache__"]
 
 [tool.ruff.lint]
 select = ["E", "F", "W", "C90", "B", "RUF"]
+
+[tool.pytest.ini_options]
+timeout = "10"
