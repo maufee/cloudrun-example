@@ -163,7 +163,7 @@ The CI workflow:
 - Runs `ruff` for linting.
 - Runs `pytest` for testing.
 
-Deploy to Google Cloud Run (source deploy)
+## Deploy to Google Cloud Run (source deploy)
 ```bash
 # replace PROJECT and REGION as appropriate
 gcloud run deploy cloudrun-example \
@@ -174,7 +174,7 @@ gcloud run deploy cloudrun-example \
 ```
 Cloud Run will use buildpacks to detect Python, install dependencies from `requirements.txt`, and run the process from `Procfile`.
 
-Project structure
+## Project structure
 ```
 .
 ├── app.py              # Main Flask application (app:app)
@@ -185,16 +185,16 @@ Project structure
 └── README.md           # This file
 ```
 
-Notes and recommendations
+## Notes and recommendations
 - If you depend on system packages (ffmpeg, imagemagick, etc.) or need full control over the runtime, provide a `Dockerfile` and build a custom image instead of relying on buildpacks.
 - For private dependencies, prefer Artifact Registry or authenticated build steps rather than embedding credentials in source.
 - Keep `requirements.txt` updated if you change pinned production dependencies.
 
-Contributing
+## Contributing
 - Open issues or pull requests.
 - If you're adding functionality, include tests and update `requirements.txt` (or the `pyproject.toml` source) accordingly.
 
-License
+## License
 This project is licensed under the MIT License - see the `LICENSE` file for details.
 
 ---
