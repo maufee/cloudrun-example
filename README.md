@@ -133,14 +133,23 @@ This project uses `pytest-timeout` to prevent tests from running indefinitely, w
 
 ## Local Production Run (Gunicorn)
 
-To run the application locally using Gunicorn (mimicking the production environment):
+To run the application locally using Gunicorn (mimicking the production environment), first ensure your dependencies are installed via `uv sync`. The `uv run` command will then execute Gunicorn from within your project's virtual environment.
 
-1. **Ensure dependencies are installed** (as per "How to Run Locally" section).
-2. **Run Gunicorn**:
-   ```bash
-   uv run gunicorn --bind 0.0.0.0:8080 --workers 1 --threads 8 app:app
-   ```
-   The application will be available at `http://127.0.0.1:8080`.
+```bash
+uv run gunicorn --bind 0.0.0.0:8080 --workers 1 --threads 8 app:app
+```
+
+- The application will be available at `http://127.0.0.1:8080`.
+- Press `Ctrl-C` to perform a graceful shutdown of the server.
+
+### Understanding the Gunicorn Command
+
+- **`app:app`**: This tells Gunicorn how to find your application. The format is `<module_name>:<variable_name>`. In our case, it means: "in the `app.py` file, find the Flask object named `app`."
+
+- **`--workers 1 --threads 8`**: This configures the concurrency model.
+    - **Workers** are separate OS processes. Multiple workers allow your app to utilize multiple CPU cores and achieve true parallelism.
+    - **Threads** are managed within a worker process. Multiple threads allow a single worker to handle multiple I/O-bound requests concurrently (e.g., requests waiting on a database or API call).
+    - Our choice of 1 worker and 8 threads is a sensible default for a small, single-core environment, allowing one process to handle up to 8 concurrent connections.
 
 ## CI Workflow
 
