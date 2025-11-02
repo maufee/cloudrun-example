@@ -108,7 +108,7 @@ This project uses `pytest-cov` to measure code coverage by our tests. This helps
 
 This project uses `pytest-timeout` to prevent tests from running indefinitely, which can be crucial in CI/CD pipelines or large test suites.
 
-- **Global Timeout:** A default global timeout is configured in `pytest.ini` (e.g., `timeout = 10` seconds).
+- **Global Timeout:** A default global timeout is configured in `pyproject.toml` under `[tool.pytest.ini_options]` (e.g., `timeout = "10"` seconds).
 
 - **Per-Test/Per-Module Timeout:** You can override the global timeout or set specific timeouts using `pytest` markers:
   ```python
@@ -126,7 +126,7 @@ This project uses `pytest-timeout` to prevent tests from running indefinitely, w
       assert True
   ```
 
-- **To run tests with timeout enabled** (this is automatic when `pytest.ini` is present):
+- **To run tests with timeout enabled** (this is automatic when `pyproject.toml` is configured):
   ```bash
   uv run python -m pytest
   ```
