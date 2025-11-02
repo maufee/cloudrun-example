@@ -1,13 +1,13 @@
 # Python Flask Web App on Google Cloud Run
 
-[![python](https://img.shields.io/badge/python-%3E%3D3.13-blue)](https://www.python.org/)
+[![python](https://img.shields.io/badge/python-%3E%3D3.13-blue)](https://www.python.org/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
 A minimal "Hello World" Flask application intended for deployment to Google Cloud Run using source deployment (Cloud Buildpacks).
 
 Why this project
 - Demonstrates a small, production-ready Python/Flask layout suitable for Cloud Run.
 - Uses `gunicorn` in production (via `Procfile`) and the Flask dev server for local work.
-- Dependency-friendly: development uses `uv`/`pyproject.toml`, while `requirements.txt` supports Buildpacks.
+- Dependency-friendly: `uv` manages dependencies via `pyproject.toml` and `uv.lock` for local development, with `requirements.txt` generated for Cloud Run Buildpacks.
 
 Quick overview
 - Main app: `app.py` (Flask application instance `app`)
