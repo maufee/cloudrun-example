@@ -1,0 +1,25 @@
+# Default .gcloudignore file
+#
+# This file is used to prevent files from being uploaded to Google Cloud during
+# deployment. It works similarly to .gitignore.
+
+.gcloudignore
+
+# Python build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Virtual environment
+.venv/
+
+# Git directory
+.git/
+
+# Test and coverage artifacts
+.pytest_cache/
+.coverage
+
+# IDE and editor files
+.vscode/
+.idea/

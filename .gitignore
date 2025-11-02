@@ -22,8 +22,6 @@ Thumbs.db
 # uv specific
 .uv/
 
-# Cloud Run specific
-.gcloudignore
 
 # Build artifacts
 cloudrun_example.egg-info/
