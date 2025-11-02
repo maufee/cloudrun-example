@@ -30,7 +30,7 @@ Quick overview
 
 4. **Install dependencies**:
    ```bash
-   uv pip sync --all-extras
+   uv sync --all-extras
    ```
 
 5. **Run the development server**:
