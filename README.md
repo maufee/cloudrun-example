@@ -35,9 +35,27 @@ Quick overview
 
 5. **Run the development server**:
    ```bash
-   uv run flask run
+   FLASK_DEBUG=1 uv run flask run
    ```
-   The application will be available at `http://127.0.0.1:8080`.
+   The application will be available at `http://127.0.0.1:5000`.
+
+### Understanding Flask Debug Mode
+
+Flask's debug mode is a powerful feature for local development that provides:
+- **Interactive Debugger:** Catches unhandled exceptions and allows you to inspect the code state in your browser.
+- **Automatic Reloader:** Automatically restarts the server when code changes are detected, so you don't have to manually restart it after every modification.
+
+**Controlling Debug Mode:**
+- By default, we've enabled it for local development using `FLASK_DEBUG=1`.
+- To explicitly disable debug mode (e.g., for performance testing or if you prefer manual restarts), you can set `FLASK_DEBUG=0`:
+  ```bash
+  FLASK_DEBUG=0 uv run flask run
+  ```
+
+**⚠️ Important Security Warning:**
+Never run Flask applications with debug mode enabled in a production environment. The interactive debugger can allow arbitrary code execution, posing a severe security risk. Debug mode is strictly for development purposes.
+
+For more details, refer to the [Flask Debug Mode documentation](https://flask.palletsprojects.com/en/latest/server/#debug-mode).
 
 ## Testing and Linting
 
