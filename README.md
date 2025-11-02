@@ -75,6 +75,35 @@ This project uses `ruff` for linting and `pytest` for testing. Both are configur
   uv run python -m pytest
   ```
 
+### Running Specific Tests
+
+You can run specific tests by passing arguments to `pytest`:
+
+- **Run all tests in a file**:
+  ```bash
+  uv run python -m pytest tests/test_app.py
+  ```
+
+- **Run a single test function by name**:
+  ```bash
+  uv run python -m pytest tests/test_app.py::test_root
+  ```
+
+### Test Coverage
+
+This project uses `pytest-cov` to measure code coverage by our tests. This helps ensure that our tests are thorough.
+
+- **To generate a coverage report in the terminal**:
+  ```bash
+  uv run python -m pytest --cov=app
+  ```
+
+- **To enforce a minimum coverage percentage**:
+  You can make the test suite fail if coverage drops below a certain threshold (e.g., 90%). This is great for maintaining testing standards.
+  ```bash
+  uv run python -m pytest --cov=app --cov-fail-under=90
+  ```
+
 ## Local Production Run (Gunicorn)
 
 To run the application locally using Gunicorn (mimicking the production environment):
