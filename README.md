@@ -104,6 +104,33 @@ This project uses `pytest-cov` to measure code coverage by our tests. This helps
   uv run python -m pytest --cov=app --cov-fail-under=90
   ```
 
+### Test Timeout
+
+This project uses `pytest-timeout` to prevent tests from running indefinitely, which can be crucial in CI/CD pipelines or large test suites.
+
+- **Global Timeout:** A default global timeout is configured in `pytest.ini` (e.g., `timeout = 10` seconds).
+
+- **Per-Test/Per-Module Timeout:** You can override the global timeout or set specific timeouts using `pytest` markers:
+  ```python
+  import pytest
+  import time
+
+  @pytest.mark.timeout(5) # This test will time out after 5 seconds
+  def test_long_running_task():
+      time.sleep(6) # This will cause a timeout
+      assert True
+
+  @pytest.mark.timeout(timeout=20, method="thread") # Use a thread-based timeout
+  def test_another_long_task():
+      time.sleep(15)
+      assert True
+  ```
+
+- **To run tests with timeout enabled** (this is automatic when `pytest.ini` is present):
+  ```bash
+  uv run python -m pytest
+  ```
+
 ## Local Production Run (Gunicorn)
 
 To run the application locally using Gunicorn (mimicking the production environment):
