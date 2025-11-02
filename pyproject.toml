@@ -4,6 +4,8 @@ version = "0.1.0"
 dependencies = [
     "flask~=2.3.2",
     "gunicorn~=21.2.0",
+    "pytest>=7.0",
+    "ruff>=0.12.0",
 ]
 requires-python = ">=3.13"
 
@@ -15,11 +17,6 @@ build-backend = "setuptools.build_meta"
 # Basic ruff configuration used by CI and local linting
 line-length = 88
 exclude = [".venv", "build", "dist", "__pycache__"]
-select = ["E", "F", "W", "C90", "B", "RUF"]
 
-# Optional/dev dependencies for local development (used by uv)
-[project.optional-dependencies]
-dev = [
-    "pytest>=7.0",
-    "ruff>=0.12.0",
-]
+[tool.ruff.lint]
+select = ["E", "F", "W", "C90", "B", "RUF"]
