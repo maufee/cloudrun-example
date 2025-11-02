@@ -164,15 +164,46 @@ The CI workflow:
 - Runs `pytest` for testing.
 
 ## Deploy to Google Cloud Run (source deploy)
+
+This project is deployed to Cloud Run using the **source deployment** method, where Google Cloud Buildpacks automatically build a container image from your source code.
+
+### 1. Generate `requirements.txt`
+
+Cloud Run's build process uses the standard `requirements.txt` file to install dependencies. It does not use `uv` or `pyproject.toml` directly. Before deploying, you must generate the `requirements.txt` file from your `pyproject.toml`:
+
 ```bash
-# replace PROJECT and REGION as appropriate
+uv pip compile pyproject.toml -o requirements.txt
+```
+
+### 2. Understand the `Procfile`
+
+The `Procfile` is a critical file that tells Cloud Run what command to run to start your web server. Its content is:
+
+```
+web: gunicorn --bind :$PORT --workers 1 --threads 8 app:app
+```
+
+- The `web:` label is a **process type**. For web services, Cloud Run specifically looks for the `web` process type to start the server that will receive incoming HTTP traffic.
+
+### 3. Deploy
+
+For convenience, it's best to export your Project ID and Region as environment variables.
+
+```bash
+# Set your project and region
+export PROJECT_ID="YOUR_PROJECT_ID" # Replace with your Google Cloud Project ID
+export REGION="us-west1"
+```
+
+Then, you can run the deployment command without modification.
+```bash
+# Deploy to Cloud Run
 gcloud run deploy cloudrun-example \
   --source . \
-  --project=YOUR_PROJECT_ID \
-  --region=us-west1 \
+  --project=$PROJECT_ID \
+  --region=$REGION \
   --platform=managed
 ```
-Cloud Run will use buildpacks to detect Python, install dependencies from `requirements.txt`, and run the process from `Procfile`.
 
 ## Project structure
 ```
@@ -186,6 +217,7 @@ Cloud Run will use buildpacks to detect Python, install dependencies from `requi
 ```
 
 ## Notes and recommendations
+- The `Procfile` must be in the project root directory for Cloud Run's buildpacks to find it. Other configuration files like `.gcloudignore` also reside in the root.
 - If you depend on system packages (ffmpeg, imagemagick, etc.) or need full control over the runtime, provide a `Dockerfile` and build a custom image instead of relying on buildpacks.
 - For private dependencies, prefer Artifact Registry or authenticated build steps rather than embedding credentials in source.
 - Keep `requirements.txt` updated if you change pinned production dependencies.
