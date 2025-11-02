@@ -15,12 +15,15 @@ Quick overview
 
 ## How to Run Locally
 
+This project uses `uv` to manage dependencies and the development workflow.
+
 1. **Install `uv`**:
    Follow the official instructions to install `uv`.
 
-2. **Create a virtual environment**:
+2. **Create and Sync the Virtual Environment**:
+   This command creates a virtual environment, generates the `uv.lock` file with exact package versions, and installs them.
    ```bash
-   uv venv
+   uv sync
    ```
 
 3. **Activate the virtual environment**:
@@ -28,12 +31,7 @@ Quick overview
    source .venv/bin/activate
    ```
 
-4. **Install dependencies**:
-   ```bash
-   uv sync --all-extras
-   ```
-
-5. **Run the development server**:
+4. **Run the development server**:
    ```bash
    FLASK_DEBUG=1 uv run flask run
    ```
@@ -159,7 +157,7 @@ The CI workflow:
 - Checks out the code.
 - Sets up Python 3.13.
 - Installs `uv`.
-- Installs all project dependencies (including dev extras) using `uv pip sync pyproject.toml --all-extras`.
+- Installs all project dependencies using `uv sync` (which uses `uv.lock` to ensure exact versions).
 - Runs `ruff` for linting.
 - Runs `pytest` for testing.
 
@@ -169,10 +167,10 @@ This project is deployed to Cloud Run using the **source deployment** method, wh
 
 ### 1. Generate `requirements.txt`
 
-Cloud Run's build process uses the standard `requirements.txt` file to install dependencies. It does not use `uv` or `pyproject.toml` directly. Before deploying, you must generate the `requirements.txt` file from your `pyproject.toml`:
+Cloud Run's build process uses the standard `requirements.txt` file to install dependencies. It does not use `uv` or `pyproject.toml` directly. Before deploying, you must generate the `requirements.txt` file from your local environment to ensure it matches the locked dependencies.
 
 ```bash
-uv pip compile pyproject.toml -o requirements.txt
+uv pip freeze > requirements.txt
 ```
 
 ### 2. Understand the `Procfile`
@@ -183,20 +181,17 @@ The `Procfile` is a critical file that tells Cloud Run what command to run to st
 web: gunicorn --bind :$PORT --workers 1 --threads 8 app:app
 ```
 
-- The `web:` label is a **process type**. For web services, Cloud Run specifically looks for the `web` process type to start the server that will receive incoming HTTP traffic.
+- The `web:` label is a **process type**. For web services, Cloud Run specifically looks for the `web` process type to start the server that will receive incoming HTTP traffic. For more details on the `Procfile` format and other possible process types, you can refer to [Heroku's Procfile documentation](https://devcenter.heroku.com/articles/procfile), which is the standard that Google Cloud Buildpacks follow.
 
 ### 3. Deploy
 
-For convenience, it's best to export your Project ID and Region as environment variables.
+For convenience, it's best to export your Project ID and Region as environment variables. Then, you can run the deployment command without modification.
 
 ```bash
 # Set your project and region
 export PROJECT_ID="YOUR_PROJECT_ID" # Replace with your Google Cloud Project ID
 export REGION="us-west1"
-```
 
-Then, you can run the deployment command without modification.
-```bash
 # Deploy to Cloud Run
 gcloud run deploy cloudrun-example \
   --source . \
@@ -208,6 +203,7 @@ gcloud run deploy cloudrun-example \
 ## Project structure
 ```
 .
+├── .gcloudignore         # Specifies files to ignore when deploying to Google Cloud
 ├── app.py              # Main Flask application (app:app)
 ├── Procfile            # Production start command used by Cloud Run (gunicorn)
 ├── pyproject.toml      # Project definition and development dependencies for `uv`
@@ -218,6 +214,7 @@ gcloud run deploy cloudrun-example \
 
 ## Notes and recommendations
 - The `Procfile` must be in the project root directory for Cloud Run's buildpacks to find it. Other configuration files like `.gcloudignore` also reside in the root.
+- The `.gcloudignore` file prevents specified files and directories from being uploaded to Google Cloud during deployment, reducing build times and preventing sensitive files from being exposed. It is similar in function to `.gitignore`.
 - If you depend on system packages (ffmpeg, imagemagick, etc.) or need full control over the runtime, provide a `Dockerfile` and build a custom image instead of relying on buildpacks.
 - For private dependencies, prefer Artifact Registry or authenticated build steps rather than embedding credentials in source.
 - Keep `requirements.txt` updated if you change pinned production dependencies.
@@ -257,3 +254,17 @@ To enable this, add the following to your `pyproject.toml`:
 timeout = "10"
 timeout_func_only = true
 ```
+
+### Q: Why did `uv.lock` and `requirements.txt` have different package versions?
+
+**A:** You astutely observed that `uv sync` (which uses `uv.lock`) and `uv pip compile` (which creates `requirements.txt`) can resolve to different versions. This is because they can have different resolution strategies (`sync` often prefers the latest possible version while `compile` may prefer the minimum possible for broader compatibility).
+
+This creates a dangerous inconsistency between the local development environment and the production environment built from `requirements.txt`.
+
+**The Solution:** The workflow in this project has been updated to enforce consistency. We now use `requirements.txt` as the **single source of truth** for installation in *both* local and production environments. The correct local workflow is:
+
+1.  `uv pip compile pyproject.toml -o requirements.txt` (To generate the production lock file)
+2.  `uv pip install -r requirements.txt` (To install the exact versions from the lock file locally)
+
+This guarantees your local environment perfectly mirrors the one Cloud Run will build.
+
