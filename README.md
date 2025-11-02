@@ -21,9 +21,9 @@ This project uses `uv` to manage dependencies and the development workflow.
    Follow the official instructions to install `uv`.
 
 2. **Create and Sync the Virtual Environment**:
-   This command creates a virtual environment, generates the `uv.lock` file with exact package versions, and installs them.
+   This command creates a virtual environment, generates the `uv.lock` file with exact package versions, and installs all production and development dependencies.
    ```bash
-   uv sync
+   uv sync --all-extras
    ```
 
 3. **Activate the virtual environment**:
@@ -89,17 +89,17 @@ You can run specific tests by passing arguments to `pytest`:
 
 ### Test Coverage
 
-This project uses `pytest-cov` to measure code coverage by our tests. This helps ensure that our tests are thorough.
+This project uses `pytest-cov` to measure code coverage by our tests. The minimum coverage threshold is configured centrally in `pyproject.toml` under the `[tool.coverage.report]` section and is enforced for both local and CI test runs.
 
 - **To generate a coverage report in the terminal**:
   ```bash
   uv run python -m pytest --cov=app
   ```
 
-- **To enforce a minimum coverage percentage**:
-  You can make the test suite fail if coverage drops below a certain threshold (e.g., 90%). This is great for maintaining testing standards.
+- **To run tests and enforce the minimum coverage percentage**:
+  This is now the default behavior. `pytest` will automatically fail if coverage drops below the threshold defined in `pyproject.toml` (e.g., 90%).
   ```bash
-  uv run python -m pytest --cov=app --cov-fail-under=90
+  uv run python -m pytest --cov=app
   ```
 
 ### Test Timeout
@@ -156,10 +156,10 @@ This project includes a GitHub Actions workflow (`.github/workflows/ci.yml`) tha
 The CI workflow:
 - Checks out the code.
 - Sets up Python 3.13.
-- Installs `uv`.
-- Installs all project dependencies using `uv sync` (which uses `uv.lock` to ensure exact versions).
+- Installs `uv` using the official `astral-sh/setup-uv` action.
+- Installs all project dependencies using `uv sync --locked --all-extras` to ensure the lock file is up-to-date.
 - Runs `ruff` for linting.
-- Runs `pytest` for testing.
+- Runs `pytest` and enforces the minimum test coverage threshold defined in `pyproject.toml`.
 
 ## Deploy to Google Cloud Run (source deploy)
 
@@ -185,13 +185,15 @@ web: gunicorn --bind :$PORT --workers 1 --threads 8 app:app
 
 ### 3. Deploy
 
-For convenience, it's best to export your Project ID and Region as environment variables. Then, you can run the deployment command without modification.
+For convenience, it's best to export your Project ID and Region as environment variables.
 
 ```bash
 # Set your project and region
 export PROJECT_ID="YOUR_PROJECT_ID" # Replace with your Google Cloud Project ID
 export REGION="us-west1"
-
+```
+Then, you can run the deployment command without modification.
+```bash
 # Deploy to Cloud Run
 gcloud run deploy cloudrun-example \
   --source . \

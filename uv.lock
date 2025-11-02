@@ -30,6 +30,10 @@ source = { editable = "." }
 dependencies = [
     { name = "flask" },
     { name = "gunicorn" },
+]
+
+[package.optional-dependencies]
+dev = [
     { name = "pytest" },
     { name = "pytest-cov" },
     { name = "pytest-timeout" },
@@ -40,11 +44,12 @@ dependencies = [
 requires-dist = [
     { name = "flask", specifier = "~=2.3.2" },
     { name = "gunicorn", specifier = "~=21.2.0" },
-    { name = "pytest", specifier = ">=7.0" },
-    { name = "pytest-cov" },
-    { name = "pytest-timeout" },
-    { name = "ruff", specifier = ">=0.12.0" },
+    { name = "pytest", marker = "extra == 'dev'", specifier = ">=7.0" },
+    { name = "pytest-cov", marker = "extra == 'dev'" },
+    { name = "pytest-timeout", marker = "extra == 'dev'" },
+    { name = "ruff", marker = "extra == 'dev'", specifier = ">=0.12.0" },
 ]
+provides-extras = ["dev"]
 
 [[package]]
 name = "colorama"

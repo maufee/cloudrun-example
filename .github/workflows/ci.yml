@@ -21,14 +21,18 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
 
-      - name: Install uv
-        run: curl -LsSf https://astral.sh/uv/install.sh | sh
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v1
+        with:
+          uv-version: latest
 
       - name: Install Dependencies
-        run: ~/.uv/bin/uv pip sync --all-extras
+        run: uv sync --locked --all-extras
 
       - name: Lint with ruff
-        run: ~/.uv/bin/uv run ruff check .
+        run: uv run ruff check .
 
-      - name: Run tests with pytest
-        run: ~/.uv/bin/uv run pytest
+      - name: Run tests with pytest and enforce coverage
+        run: uv run python -m pytest --cov=app
+
+      
