@@ -167,10 +167,10 @@ This project is deployed to Cloud Run using the **source deployment** method, wh
 
 ### 1. Generate `requirements.txt`
 
-Cloud Run's build process uses the standard `requirements.txt` file to install dependencies. It does not use `uv` or `pyproject.toml` directly. Before deploying, you must generate the `requirements.txt` file from your local environment to ensure it matches the locked dependencies.
+Cloud Run's build process uses the standard `requirements.txt` file. To ensure the versions in this file exactly match your development environment (defined by `uv.lock`), generate it using the following command. The `--exclude-editable` flag prevents your local project from being included in the file.
 
 ```bash
-uv pip freeze > requirements.txt
+uv pip freeze --exclude-editable > requirements.txt
 ```
 
 ### 2. Understand the `Procfile`
@@ -257,14 +257,14 @@ timeout_func_only = true
 
 ### Q: Why did `uv.lock` and `requirements.txt` have different package versions?
 
-**A:** You astutely observed that `uv sync` (which uses `uv.lock`) and `uv pip compile` (which creates `requirements.txt`) can resolve to different versions. This is because they can have different resolution strategies (`sync` often prefers the latest possible version while `compile` may prefer the minimum possible for broader compatibility).
+**A:** You astutely observed that different `uv` commands can sometimes resolve dependencies to different versions. This can create a dangerous inconsistency between your local development environment and the production build.
 
-This creates a dangerous inconsistency between the local development environment and the production environment built from `requirements.txt`.
+**The Solution:** The workflow in this project is now designed to prevent this. We use `uv.lock` as the primary source of truth for the local environment, and then generate `requirements.txt` *from* that locked environment, ensuring a perfect match.
 
-**The Solution:** The workflow in this project has been updated to enforce consistency. We now use `requirements.txt` as the **single source of truth** for installation in *both* local and production environments. The correct local workflow is:
+The correct workflow is:
 
-1.  `uv pip compile pyproject.toml -o requirements.txt` (To generate the production lock file)
-2.  `uv pip install -r requirements.txt` (To install the exact versions from the lock file locally)
+1.  `uv sync` (To generate `uv.lock` and install exact versions locally)
+2.  `uv pip freeze --exclude-editable > requirements.txt` (To generate a clean `requirements.txt` for production that matches the local environment)
 
 This guarantees your local environment perfectly mirrors the one Cloud Run will build.
 
