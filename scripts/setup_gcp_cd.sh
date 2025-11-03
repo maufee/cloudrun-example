@@ -100,7 +100,7 @@ grant_roles() {
         echo "Error: The default Compute Engine service account was not found." >&2
         echo "This can happen on new projects. Please either:" >&2
         echo "1. Enable the Compute Engine API on project '${PROJECT_ID}' by running:" >&2
-        echo "   gcloud services enable compute.googleapis.com --project=\"${PROJECT_ID}\""> &2
+                echo "   gcloud services enable compute.googleapis.com --project=\"${PROJECT_ID}\"" >&2
         echo "2. Or, create a dedicated runtime service account and provide it via the 'GCP_RUNTIME_SA' environment variable." >&2
         exit 1
       fi
