@@ -64,7 +64,6 @@ enable_apis() {
 create_service_account() {
     echo "Checking for service account: $SERVICE_ACCOUNT"
     gcloud iam service-accounts describe "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" >/dev/null || \
-    gcloud iam service-accounts describe "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" >/dev/null || \
         (echo "Service account not found, creating..." && \
         gcloud iam service-accounts create "$SERVICE_ACCOUNT" \
             --project="$PROJECT_ID" \
@@ -120,7 +119,6 @@ create_wif() {
     fi
 
     echo "Checking for Workload Identity Provider '$PROVIDER_ID'..."
-    gcloud iam workload-identity-pools providers describe "$PROVIDER_ID" --project="$PROJECT_ID" --location="global" --workload-identity-pool="github-pool" >/dev/null || \
     gcloud iam workload-identity-pools providers describe "$PROVIDER_ID" --project="$PROJECT_ID" --location="global" --workload-identity-pool="github-pool" >/dev/null || \
         (echo "Provider not found, creating..." && \
         gcloud iam workload-identity-pools providers create-oidc "$PROVIDER_ID" \
