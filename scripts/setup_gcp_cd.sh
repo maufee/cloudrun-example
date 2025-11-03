@@ -74,7 +74,20 @@ create_service_account() {
 grant_roles() {
     echo "Granting roles to service account..."
     local CD_SA_EMAIL="$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com"
-    grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "roles/run.developer"
+    local CUSTOM_ROLE="githubCdDeployer"
+
+    # Create a custom role with minimal permissions for deploying to Cloud Run
+    echo "Checking for custom role '$CUSTOM_ROLE'..."
+    if ! gcloud iam roles describe "$CUSTOM_ROLE" --project="$PROJECT_ID" >/dev/null 2>&1; then
+        echo "Custom role not found, creating..."
+        gcloud iam roles create "$CUSTOM_ROLE" --project="$PROJECT_ID" \
+            --title="GitHub CD Deployer" \
+            --description="Minimal permissions for deploying to Cloud Run via GitHub Actions" \
+            --permissions="run.services.get,run.services.update" \
+            --stage=GA
+    fi
+
+    grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "projects/$PROJECT_ID/roles/$CUSTOM_ROLE"
 
     echo "Granting permission to impersonate the Cloud Run runtime service account..."
     local PROJECT_NUMBER
