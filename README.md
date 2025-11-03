@@ -217,7 +217,7 @@ This project is configured for Continuous Deployment to Google Cloud Run using G
 
 To enable Continuous Deployment, you need to perform a one-time setup in your Google Cloud project and GitHub repository.
 
-> **Prerequisites:** Before you begin, ensure you have the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) installed and updated (`gcloud components update`). You must also be authenticated (`gcloud auth login`). The setup script requires a Unix-like environment (like Linux, macOS, or WSL on Windows).
+> **Prerequisites:** Before you begin, ensure you have the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) installed and updated (`gcloud components update`). You must also be authenticated (`gcloud auth login`) with a user or principal that has sufficient permissions in the GCP project (e.g., `Owner` or `Editor` roles). The setup script requires a Unix-like environment (like Linux, macOS, or WSL on Windows).
 1. **In your Google Cloud Project:**
 
 A helper script is provided to automate the creation of the necessary GCP resources (Service Account, Workload Identity Federation, IAM bindings).

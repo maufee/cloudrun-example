@@ -34,7 +34,7 @@ grant_project_iam_binding() {
 
     echo "Ensuring project role '$role' is granted to '$member'..."
     local check
-    check=$(gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings" --filter="bindings.role = '$role' AND bindings.members:'$member' AND NOT bindings.condition" --format="value(bindings.role)")
+    check=$(gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings" --filter="bindings.role = '$role' AND bindings.members = '$member' AND NOT bindings.condition" --format="value(bindings.role)")
     if [ -z "$check" ]; then
         gcloud projects add-iam-policy-binding "$PROJECT_ID" \
             --member="$member" \
@@ -51,7 +51,7 @@ grant_sa_iam_binding() {
 
     echo "Ensuring SA role '$role' is granted to '$member' on '$sa_email'..."
     local check
-    check=$(gcloud iam service-accounts get-iam-policy "$sa_email" --project="$PROJECT_ID" --flatten="bindings" --filter="bindings.role = '$role' AND bindings.members:'$member' AND NOT bindings.condition" --format="value(bindings.role)")
+    check=$(gcloud iam service-accounts get-iam-policy "$sa_email" --project="$PROJECT_ID" --flatten="bindings" --filter="bindings.role = '$role' AND bindings.members = '$member' AND NOT bindings.condition" --format="value(bindings.role)")
     if [ -z "$check" ]; then gcloud iam service-accounts add-iam-policy-binding "$sa_email" --project="$PROJECT_ID" --member="$member" --role="$role" --condition=None --no-user-output-enabled > /dev/null; fi
 }
 
@@ -170,7 +170,7 @@ allow_auth() {
     local OLD_MEMBER="principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:ref:refs/heads/main"
     local OLD_ROLE="roles/iam.workloadIdentityUser"
     local old_binding_exists
-    old_binding_exists=$(gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings" --filter="bindings.role = '$OLD_ROLE' AND bindings.members:'$OLD_MEMBER'" --format="value(bindings.role)")
+    old_binding_exists=$(gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings" --filter="bindings.role = '$OLD_ROLE' AND bindings.members = '$OLD_MEMBER'" --format="value(bindings.role)")
     if [ -n "$old_binding_exists" ]; then
         echo "Removing old, less secure WIF binding..."
         gcloud iam service-accounts remove-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
