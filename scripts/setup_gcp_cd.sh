@@ -73,11 +73,15 @@ create_service_account() {
 # Grant the Service Account roles to deploy to Cloud Run
 grant_roles() {
     echo "Granting roles to service account..."
-    CD_SA_EMAIL="$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com"
+    local CD_SA_EMAIL="$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com"
     grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "roles/run.developer"
 
     echo "Granting permission to impersonate the Cloud Run runtime service account..."
     PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
+    if [ -z "$PROJECT_NUMBER" ]; then
+      echo "Error: Failed to retrieve project number for project '$PROJECT_ID'." >&2
+      exit 1
+    fi
 
     if [ -n "${GCP_RUNTIME_SA:-}" ]; then
       echo "Validating provided GCP_RUNTIME_SA: ${GCP_RUNTIME_SA}..."
@@ -134,10 +138,11 @@ create_wif() {
 # Allow authentications from your GitHub repo's production environment
 allow_auth() {
     echo "Allowing authentications from GitHub repository..."
-    CD_SA_EMAIL="$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com"
+    local CD_SA_EMAIL="$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com"
 
-    OLD_MEMBER="principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:ref:refs/heads/main"
-    OLD_ROLE="roles/iam.workloadIdentityUser"
+    local OLD_MEMBER="principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:ref:refs/heads/main"
+    local OLD_ROLE="roles/iam.workloadIdentityUser"
+    local old_binding_exists
     old_binding_exists=$(gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:'$OLD_MEMBER' AND bindings.role:'$OLD_ROLE'" --format="value(bindings.role)")
     if [ -n "$old_binding_exists" ]; then
         echo "Removing old, less secure WIF binding..."
@@ -155,6 +160,7 @@ print_results() {
     echo "---"
     echo "Setup complete! Copy these values into your GitHub repository's 'production' environment secrets:"
     echo "GCP_PROJECT_ID: $PROJECT_ID"
+    local WIF_PROVIDER
     WIF_PROVIDER=$(gcloud iam workload-identity-pools providers describe "$PROVIDER_ID" \
         --project="$PROJECT_ID" \
         --location="global" \
