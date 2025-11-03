@@ -79,7 +79,7 @@ grant_project_iam_binding() {
 
     echo "Ensuring project role '$role' is granted to '$member'..."
     if ! gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.role='$role' AND bindings.members:'$member'" --format="value(bindings.role)" | grep -q "."; then
-        gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
+        gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None &> /dev/null
     fi
 }
 
@@ -91,7 +91,7 @@ grant_sa_iam_binding() {
 
     echo "Ensuring SA role '$role' is granted to '$member' on '$sa_email'..."
     if ! gcloud iam service-accounts get-iam-policy "$sa_email" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.role='$role' AND bindings.members:'$member'" --format="value(bindings.role)" | grep -q "."; then
-        gcloud iam service-accounts add-iam-policy-binding "$sa_email" --project="$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
+        gcloud iam service-accounts add-iam-policy-binding "$sa_email" --project="$PROJECT_ID" --member="$member" --role="$role" --condition=None &> /dev/null
     fi
 }
 
