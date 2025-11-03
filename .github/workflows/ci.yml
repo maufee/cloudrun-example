@@ -35,4 +35,29 @@ jobs:
       - name: Run tests with pytest and enforce coverage
         run: uv run python -m pytest --cov
 
-      
+  deploy:
+    needs: test-and-lint
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    environment: production # Assign to the production environment
+    permissions:
+      id-token: write # Required for Workload Identity Federation
+      contents: read # Required to checkout the code
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Google Auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.GCP_WORKLOAD_IDENTITY_PROVIDER }}
+          service_account: ${{ secrets.GCP_SERVICE_ACCOUNT }}
+
+      - name: Deploy to Cloud Run
+        uses: google-github-actions/deploy-cloudrun@v2
+        with:
+          service: cloudrun-example
+          region: us-west1 # Or your preferred region
+          source: .
+          project_id: ${{ secrets.GCP_PROJECT_ID }}

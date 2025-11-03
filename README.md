@@ -12,6 +12,8 @@ Why this project
 Quick overview
 - Main app: `app.py` (Flask application instance `app`)
 - Start command (Cloud Run / production): `gunicorn --bind :$PORT --workers 1 --threads 8 app:app` (see `Procfile`)
+- Flask version: `3.1.2`
+- Gunicorn version: `23.0.0`
 
 ## How to Run Locally
 
@@ -164,10 +166,10 @@ This project is deployed to Cloud Run using the **source deployment** method, wh
 
 ### 1. Generate `requirements.txt`
 
-Cloud Run's build process uses the standard `requirements.txt` file. To ensure the versions in this file exactly match your development environment (defined by `uv.lock`), generate it using the following command. The `--exclude-editable` flag prevents your local project from being included in the file.
+Cloud Run's build process uses the standard `requirements.txt` file. To ensure the versions in this file exactly match your development environment (defined by `uv.lock`), generate it using the following command.
 
 ```bash
-uv pip freeze --exclude-editable > requirements.txt
+uv pip compile pyproject.toml --output-file=requirements.txt
 ```
 
 ### 2. Understand the `Procfile`
@@ -199,6 +201,50 @@ gcloud run deploy cloudrun-example \
   --platform=managed
 ```
 
+## Continuous Deployment (CD) with GitHub Actions
+
+This project is configured for Continuous Deployment to Google Cloud Run using GitHub Actions. Once set up, any changes pushed to the `main` branch that pass the CI checks will be automatically deployed.
+
+### How it Works
+
+1.  **Trigger:** A push to the `main` branch triggers the workflow.
+2.  **CI Checks:** The `test-and-lint` job runs, ensuring code quality and correctness.
+3.  **CD Trigger:** If the `test-and-lint` job passes, the `deploy` job starts.
+4.  **Authentication:** The `deploy` job securely authenticates to Google Cloud using Workload Identity Federation.
+5.  **Deployment:** The application is deployed to Cloud Run using the `google-github-actions/deploy-cloudrun` action.
+
+### One-Time Setup for CD
+
+To enable Continuous Deployment, you need to perform a one-time setup in your Google Cloud project and GitHub repository.
+
+> **Prerequisites:** Before you begin, ensure you have the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) installed and updated (`gcloud components update`). You must also be authenticated (`gcloud auth login`) with a user or principal that has sufficient permissions in the GCP project (e.g., `Owner` or `Editor` roles). The setup script requires a Unix-like environment (like Linux, macOS, or WSL on Windows).
+1. **In your Google Cloud Project:**
+
+A helper script is provided to automate the creation of the necessary GCP resources (Service Account, Workload Identity Federation, IAM bindings).
+
+  -  **Configure environment variables:** Before running the script, export the following environment variables in your terminal:
+      ```bash
+      export PROJECT_ID="your-gcp-project-id" # Replace with your Google Cloud Project ID
+      export REPO="your-github-username/your-repo-name" # Replace with your GitHub repository (e.g., "octocat/Spoon-Knife")
+      # export SERVICE_ACCOUNT="my-custom-sa" # Optional: defaults to "github-cd-sa"
+      # export GCP_RUNTIME_SA="your-run-sa@your-gcp-project-id.iam.gserviceaccount.com" # Optional: The runtime SA for your Cloud Run service. If not set, the script defaults to using the project's Compute Engine default service account.
+      ```
+  -  **Run the script:** Make the script executable and then run it:
+      ```bash
+      chmod +x ./scripts/setup_gcp_cd.sh
+      ./scripts/setup_gcp_cd.sh
+      ```
+
+2. **In your GitHub Repository Settings:**
+
+The script will output the exact names and values for the three secrets you need to create.
+
+1.  Go to **`Settings > Environments`** and click **`New environment`**.
+2.  Name it **`production`** and click **`Configure environment`**. (Note: This name must be exactly `production` for the CD workflow to authenticate.)
+3.  In the environment settings, find the **`Environment secrets`** section and click **`Add secret`** for each of the three secrets (`GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, and `GCP_SERVICE_ACCOUNT`).
+4.  Copy the values that were printed in your terminal from the final step of the setup script.
+
+
 ## Project structure
 ```
 .
@@ -219,8 +265,25 @@ gcloud run deploy cloudrun-example \
 - Keep `requirements.txt` updated if you change pinned production dependencies.
 
 ## Contributing
-- Open issues or pull requests.
-- If you're adding functionality, include tests and update `requirements.txt` (or the `pyproject.toml` source) accordingly.
+
+Contributions are welcome! This project follows a standard fork-and-pull request workflow. Branch protection is enabled for the `main` branch.
+
+1.  **Fork** the repository to your own GitHub account.
+2.  **Clone** your fork to your local machine.
+3.  **Create a new branch** for your feature or bug fix (`git checkout -b my-new-feature`).
+4.  **Set up the environment** by running `uv sync --all-extras`.
+5.  **Make your changes.**
+    - If you add or change a dependency, modify `pyproject.toml` and then run `./scripts/sync-deps.sh` to update the lock file, virtual environment, and production requirements. (Note: You may need to make the script executable first with `chmod +x ./scripts/sync-deps.sh`).
+6.  **Run checks locally** to ensure your changes pass before pushing.
+    ```bash
+    # Run the linter
+    uv run ruff check .
+    # Run the test suite with coverage
+    uv run python -m pytest --cov
+    ```
+7.  **Commit and push** your changes to your fork.
+8.  **Open a pull request** from your fork's branch to the `main` branch of the original repository.
+9.  Your pull request will be reviewed after the automated CI checks have passed.
 
 ## License
 This project is licensed under the MIT License - see the `LICENSE` file for details.
@@ -254,16 +317,5 @@ timeout = "10"
 timeout_func_only = true
 ```
 
-### Q: Why did `uv.lock` and `requirements.txt` have different package versions?
 
-**A:** You astutely observed that different `uv` commands can sometimes resolve dependencies to different versions. This can create a dangerous inconsistency between your local development environment and the production build.
-
-**The Solution:** The workflow in this project is now designed to prevent this. We use `uv.lock` as the primary source of truth for the local environment, and then generate `requirements.txt` *from* that locked environment, ensuring a perfect match.
-
-The correct workflow is:
-
-1.  `uv sync` (To generate `uv.lock` and install exact versions locally)
-2.  `uv pip freeze --exclude-editable > requirements.txt` (To generate a clean `requirements.txt` for production that matches the local environment)
-
-This guarantees your local environment perfectly mirrors the one Cloud Run will build.
 
