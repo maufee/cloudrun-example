@@ -170,13 +170,13 @@ main() {
     check_gcloud
 
     # --- Configuration ---
-    if [ -z "${PROJECT_ID}" ]; then
+    if [ -z "${PROJECT_ID:-}" ]; then
       echo "Error: PROJECT_ID environment variable is not set." >&2
       echo "Please set it (e.g., export PROJECT_ID=\"your-gcp-project-id\") and re-run the script." >&2
       exit 1
     fi
 
-    if [ -z "${REPO}" ]; then
+    if [ -z "${REPO:-}" ]; then
       echo "Error: REPO environment variable is not set." >&2
       echo "Please set it (e.g., export REPO=\"your-github-username/your-repo-name\") and re-run the script." >&2
       exit 1
