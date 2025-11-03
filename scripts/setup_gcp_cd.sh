@@ -114,6 +114,18 @@ fi
 
 # Default to the Compute Engine default SA, but allow overriding via an environment variable.
 RUNTIME_SA_EMAIL="${GCP_RUNTIME_SA:-${PROJECT_NUMBER}-compute@developer.gserviceaccount.com}"
+
+# If using the default SA (i.e., GCP_RUNTIME_SA was not set), verify it exists.
+if [ -z "${GCP_RUNTIME_SA:-}" ]; then
+  echo "Verifying default Compute Engine service account (${RUNTIME_SA_EMAIL}) exists..."
+  if ! gcloud iam service-accounts describe "${RUNTIME_SA_EMAIL}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
+    echo "Error: The default Compute Engine service account was not found." >&2
+    echo "This can happen on new projects. Please either:" >&2
+    echo "1. Enable the Compute Engine API on project '${PROJECT_ID}' (which creates this account), or" >&2
+    echo "2. Create a dedicated runtime service account and provide it via the 'GCP_RUNTIME_SA' environment variable." >&2
+    exit 1
+  fi
+fi
 grant_sa_iam_binding "$RUNTIME_SA_EMAIL" "serviceAccount:$CD_SA_EMAIL" "roles/iam.serviceAccountUser"
 
 
