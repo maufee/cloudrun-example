@@ -72,20 +72,22 @@ grant_iam_binding() {
     local member=$1
     local role=$2
     local is_project_level=$3
-    local get_policy_cmd
-    local add_policy_cmd
+    local filter_str="bindings.members:'$member' AND bindings.role:'$role'"
+    local policy_output
 
     if [ "$is_project_level" = true ]; then
-        get_policy_cmd=(gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:'$member' AND bindings.role:'$role'" --format="value(bindings.role)")
-        add_policy_cmd=(gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None)
+        policy_output=$(gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="$filter_str" --format="value(bindings.role)")
     else
-        get_policy_cmd=(gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:'$member' AND bindings.role:'$role'" --format="value(bindings.role)")
-        add_policy_cmd=(gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --member="$member" --role="$role")
+        policy_output=$(gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="$filter_str" --format="value(bindings.role)")
     fi
 
-    if [ -z "$(${get_policy_cmd[@]})" ]; then
+    if [ -z "$policy_output" ]; then
         echo "Adding $role..."
-        "${add_policy_cmd[@]}" > /dev/null
+        if [ "$is_project_level" = true ]; then
+            gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
+        else
+            gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --member="$member" --role="$role" > /dev/null
+        fi
     else
         echo "$role binding already exists, skipping."
     fi
