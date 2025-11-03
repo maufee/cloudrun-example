@@ -25,6 +25,21 @@ fi
 # Set SERVICE_ACCOUNT with a default if not provided
 SERVICE_ACCOUNT="${SERVICE_ACCOUNT:-github-cd-sa}"
 
+# --- Validate Inputs ---
+# Basic validation to prevent command injection.
+if ! [[ "$PROJECT_ID" =~ ^[a-z][a-z0-9-]{4,28}[a-z0-9]$ ]]; then
+    echo "Error: Invalid PROJECT_ID format." >&2
+    exit 1
+fi
+if ! [[ "$REPO" =~ ^[a-zA-Z0-9_.-]+/[a-zA-Z0-9_.-]+$ ]]; then
+    echo "Error: Invalid REPO format. Expected 'owner/repository'." >&2
+    exit 1
+fi
+if ! [[ "$SERVICE_ACCOUNT" =~ ^[a-z][a-z0-9-]{4,28}[a-z0-9]$ ]]; then
+    echo "Error: Invalid SERVICE_ACCOUNT format." >&2
+    exit 1
+fi
+
 echo "--- Google Cloud CD Setup ---"
 echo "Project ID: ${PROJECT_ID}"
 echo "Repository: ${REPO}"
