@@ -95,6 +95,22 @@ grant_iam_binding() {
 
 grant_iam_binding "serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" "roles/run.developer" true
 
+# Grant the CD service account permission to act as the Cloud Run runtime service account
+# This is required for new revisions of the service to be able to start.
+echo "Granting permission to impersonate the Cloud Run runtime service account..."
+PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
+RUNTIME_SA_EMAIL="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
+CD_SA_EMAIL="$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com"
+
+# Idempotently grant the iam.serviceAccountUser role.
+if ! gcloud iam service-accounts get-iam-policy "$RUNTIME_SA_EMAIL" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.role='roles/iam.serviceAccountUser' AND bindings.members:'serviceAccount:$CD_SA_EMAIL'" --format="value(bindings.role)" | grep -q "."; then
+    gcloud iam service-accounts add-iam-policy-binding "$RUNTIME_SA_EMAIL" \
+        --project="$PROJECT_ID" \
+        --role="roles/iam.serviceAccountUser" \
+        --member="serviceAccount:$CD_SA_EMAIL" \
+        --condition=None > /dev/null
+fi
+
 
 # 4. Create a Workload Identity Pool and Provider if they don't exist
 echo "Checking for Workload Identity Pool 'github-pool'..."
