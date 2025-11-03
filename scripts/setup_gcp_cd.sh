@@ -89,7 +89,7 @@ grant_iam_binding() {
 }
 
 grant_iam_binding "serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" "roles/run.developer" true
-grant_iam_binding "serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" "roles/iam.serviceAccountUser" true
+grant_iam_binding "serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" "roles/iam.serviceAccountUser" false
 
 
 # 4. Create a Workload Identity Pool and Provider if they don't exist
