@@ -220,13 +220,13 @@ To enable Continuous Deployment, you need to perform a one-time setup in your Go
 
 A helper script is provided to automate the creation of the necessary GCP resources (Service Account, Workload Identity Federation, IAM bindings).
 
-1.  **Configure environment variables:** Before running the script, export the following environment variables in your terminal:
+-  **Configure environment variables:** Before running the script, export the following environment variables in your terminal:
     ```bash
     export PROJECT_ID="your-gcp-project-id" # Replace with your Google Cloud Project ID
     export REPO="your-github-username/your-repo-name" # Replace with your GitHub repository (e.g., "octocat/Spoon-Knife")
     # export SERVICE_ACCOUNT="my-custom-sa" # Optional: defaults to "github-cd-sa"
     ```
-2.  **Run the script:** Make the script executable and then run it.
+-  **Run the script:** Make the script executable and then run it.
     ```bash
     chmod +x ./scripts/setup_gcp_cd.sh
     ./scripts/setup_gcp_cd.sh
