@@ -35,7 +35,7 @@ grant_project_iam_binding() {
     echo "Ensuring project role '$role' is granted to '$member'..."
     local check
     check=$(gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings" --filter="bindings.role = '$role' AND bindings.members:'$member' AND NOT bindings.condition" --format="value(bindings.role)")
-    if [ -z "$check" ]; then gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null; fi
+    if [ -z "$check" ]; then gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None --no-user-output-enabled > /dev/null; fi
 }
 
 # Function to idempotently grant a role on a service account.
@@ -47,7 +47,7 @@ grant_sa_iam_binding() {
     echo "Ensuring SA role '$role' is granted to '$member' on '$sa_email'..."
     local check
     check=$(gcloud iam service-accounts get-iam-policy "$sa_email" --project="$PROJECT_ID" --flatten="bindings" --filter="bindings.role = '$role' AND bindings.members:'$member' AND NOT bindings.condition" --format="value(bindings.role)")
-    if [ -z "$check" ]; then gcloud iam service-accounts add-iam-policy-binding "$sa_email" --project="$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null; fi
+    if [ -z "$check" ]; then gcloud iam service-accounts add-iam-policy-binding "$sa_email" --project="$PROJECT_ID" --member="$member" --role="$role" --condition=None --no-user-output-enabled > /dev/null; fi
 }
 
 # Enable necessary APIs
@@ -64,10 +64,11 @@ enable_apis() {
 create_service_account() {
     echo "Checking for service account: $SERVICE_ACCOUNT"
     gcloud iam service-accounts describe "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" >/dev/null || \
+    gcloud iam service-accounts describe "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" >/dev/null || \
         (echo "Service account not found, creating..." && \
         gcloud iam service-accounts create "$SERVICE_ACCOUNT" \
             --project="$PROJECT_ID" \
-            --display-name="GitHub Actions CD Service Account")
+            --display-name="GitHub Actions CD Service Account" --no-user-output-enabled)
 }
 
 # Grant the Service Account roles to deploy to Cloud Run
@@ -110,7 +111,7 @@ create_wif() {
         gcloud iam workload-identity-pools create "github-pool" \
             --project="$PROJECT_ID" \
             --location="global" \
-            --display-name="GitHub Actions Pool")
+            --display-name="GitHub Actions Pool" --no-user-output-enabled)
 
     POOL_ID=$(gcloud iam workload-identity-pools describe "github-pool" --project="$PROJECT_ID" --location="global" --format="value(name)")
     if [ -z "$POOL_ID" ]; then
@@ -120,6 +121,7 @@ create_wif() {
 
     echo "Checking for Workload Identity Provider '$PROVIDER_ID'..."
     gcloud iam workload-identity-pools providers describe "$PROVIDER_ID" --project="$PROJECT_ID" --location="global" --workload-identity-pool="github-pool" >/dev/null || \
+    gcloud iam workload-identity-pools providers describe "$PROVIDER_ID" --project="$PROJECT_ID" --location="global" --workload-identity-pool="github-pool" >/dev/null || \
         (echo "Provider not found, creating..." && \
         gcloud iam workload-identity-pools providers create-oidc "$PROVIDER_ID" \
             --project="$PROJECT_ID" \
@@ -127,7 +129,7 @@ create_wif() {
             --workload-identity-pool="github-pool" \
             --issuer-uri="https://token.actions.githubusercontent.com" \
             --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
-            --attribute-condition="attribute.repository == '$REPO'")
+            --attribute-condition="attribute.repository == '$REPO'" --no-user-output-enabled)
 }
 
 # Allow authentications from your GitHub repo's production environment
@@ -143,8 +145,7 @@ allow_auth() {
         gcloud iam service-accounts remove-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
             --project="$PROJECT_ID" \
             --role="$OLD_ROLE" \
-            --member="$OLD_MEMBER"
-    fi
+            --member="$OLD_MEMBER" --no-user-output-enabled
 
     grant_sa_iam_binding "$CD_SA_EMAIL" "principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:environment:production" "roles/iam.workloadIdentityUser"
 }
