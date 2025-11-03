@@ -12,6 +12,8 @@ Why this project
 Quick overview
 - Main app: `app.py` (Flask application instance `app`)
 - Start command (Cloud Run / production): `gunicorn --bind :$PORT --workers 1 --threads 8 app:app` (see `Procfile`)
+- Flask version: `3.1.2`
+- Gunicorn version: `23.0.0`
 
 ## How to Run Locally
 
