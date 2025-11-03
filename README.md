@@ -213,96 +213,31 @@ This project is configured for Continuous Deployment to Google Cloud Run using G
 
 ### One-Time Setup for CD
 
-To enable Continuous Deployment, you need to perform a one-time setup in your Google Cloud project and GitHub repository. This involves creating a Google Cloud Service Account, configuring Workload Identity Federation, and setting up GitHub repository secrets.
+To enable Continuous Deployment, you need to perform a one-time setup in your Google Cloud project and GitHub repository.
 
 **1. In your Google Cloud Project:**
 
-Follow these steps to create a Service Account and configure Workload Identity Federation. Replace placeholders like `your-gcp-project-id` and `your-github-username/your-repo-name` with your actual values.
+A helper script is provided to automate the creation of the necessary GCP resources (Service Account, Workload Identity Federation, IAM bindings).
 
-```bash
-set -euo pipefail
-
-# Replace these with your own values
-export PROJECT_ID="your-gcp-project-id"
-export REPO="your-github-username/your-repo-name"
-export SERVICE_ACCOUNT="github-cd-sa" # A name for the new service account
-
-# 1. Enable necessary APIs
-echo "Enabling required Google Cloud services..."
-gcloud services enable iam.googleapis.com \
-    iamcredentials.googleapis.com \
-    cloudresourcemanager.googleapis.com \
-    run.googleapis.com \
-    --project="$PROJECT_ID"
-
-# 2. Create the Service Account if it doesn't exist
-echo "Checking for service account: $SERVICE_ACCOUNT"
-gcloud iam service-accounts describe "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" &>/dev/null || \
-    (echo "Service account not found, creating..." && \
-    gcloud iam service-accounts create "$SERVICE_ACCOUNT" \
-        --project="$PROJECT_ID" \
-        --display-name="GitHub Actions CD Service Account")
-
-# 3. Grant the Service Account roles to deploy to Cloud Run
-echo "Granting roles to service account..."
-gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-    --member="serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
-    --role="roles/run.developer"
-gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-    --member="serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
-    --role="roles/iam.serviceAccountUser"
-
-# 4. Create a Workload Identity Pool and Provider if they don't exist
-echo "Checking for Workload Identity Pool 'github-pool'..."
-gcloud iam workload-identity-pools describe "github-pool" --project="$PROJECT_ID" --location="global" &>/dev/null || \
-    (echo "Pool not found, creating..." && \
-    gcloud iam workload-identity-pools create "github-pool" \
-        --project="$PROJECT_ID" \
-        --location="global" \
-        --display-name="GitHub Actions Pool")
-
-POOL_ID=$(gcloud iam workload-identity-pools describe "github-pool" --project="$PROJECT_ID" --location="global" --format="value(name)")
-
-echo "Checking for Workload Identity Provider 'github-provider'..."
-gcloud iam workload-identity-pools providers describe "github-provider" --project="$PROJECT_ID" --location="global" --workload-identity-pool="github-pool" &>/dev/null || \
-    (echo "Provider not found, creating..." && \
-    gcloud iam workload-identity-pools providers create-oidc "github-provider" \
-        --project="$PROJECT_ID" \
-        --location="global" \
-        --workload-identity-pool="github-pool" \
-        --issuer-uri="https://token.actions.githubusercontent.com" \
-        --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
-        --attribute-condition="attribute.repository != ''")
-
-# 5. Allow authentications from your GitHub repo's main branch
-echo "Allowing authentications from GitHub repository..."
-gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
-    --project="$PROJECT_ID" \
-    --role="roles/iam.workloadIdentityUser" \
-    --member="principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:ref:refs/heads/main"
-
-# 6. Output the values needed for GitHub Secrets
-echo "---"
-echo "Copy these values into your GitHub repository's 'production' environment secrets:"
-echo "GCP_PROJECT_ID: $PROJECT_ID"
-WIF_PROVIDER=$(gcloud iam workload-identity-pools providers describe "github-provider" \
-    --project="$PROJECT_ID" \
-    --location="global" \
-    --workload-identity-pool="github-pool" \
-    --format="value(name)")
-echo "GCP_WORKLOAD_IDENTITY_PROVIDER: $WIF_PROVIDER"
-echo "GCP_SERVICE_ACCOUNT: $SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com"
-```
+1.  **Configure environment variables:** Before running the script, export the following environment variables in your terminal:
+    ```bash
+    export PROJECT_ID="your-gcp-project-id" # Replace with your Google Cloud Project ID
+    export REPO="your-github-username/your-repo-name" # Replace with your GitHub repository (e.g., "octocat/Spoon-Knife")
+    # export SERVICE_ACCOUNT="my-custom-sa" # Optional: defaults to "github-cd-sa"
+    ```
+2.  **Run the script:**
+    ```bash
+    ./scripts/setup_gcp_cd.sh
+    ```
 
 **2. In your GitHub Repository Settings:**
 
-First, create a deployment environment.
+The script will output the exact names and values for the three secrets you need to create.
+
 1.  Go to **`Settings > Environments`** and click **`New environment`**.
 2.  Name it `production` and click **`Configure environment`**.
-
-Next, add the secrets to the `production` environment:
-1.  In the environment settings, find the **`Environment secrets`** section and click **`Add secret`** for each secret.
-2.  Copy the values that were printed in your terminal from the final step of the setup script.
+3.  In the environment settings, find the **`Environment secrets`** section and click **`Add secret`** for each of the three secrets.
+4.  Copy the values that were printed in your terminal from the final step of the setup script.
 
 
 ## Project structure
