@@ -52,7 +52,9 @@ grant_sa_iam_binding() {
     echo "Ensuring SA role '$role' is granted to '$member' on '$sa_email'..."
     local check
     check=$(gcloud iam service-accounts get-iam-policy "$sa_email" --project="$PROJECT_ID" --flatten="bindings" --filter="bindings.role = '$role' AND bindings.members = '$member' AND NOT bindings.condition" --format="value(bindings.role)")
-    if [ -z "$check" ]; then gcloud iam service-accounts add-iam-policy-binding "$sa_email" --project="$PROJECT_ID" --member="$member" --role="$role" --condition=None --no-user-output-enabled > /dev/null; fi
+    if [ -z "$check" ]; then
+        gcloud iam service-accounts add-iam-policy-binding "$sa_email" --project="$PROJECT_ID" --member="$member" --role="$role" --condition=None --no-user-output-enabled > /dev/null
+    fi
 }
 
 # Enable necessary APIs
