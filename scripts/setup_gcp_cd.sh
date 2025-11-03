@@ -182,7 +182,15 @@ main() {
     fi
 
     SERVICE_ACCOUNT="${SERVICE_ACCOUNT:-github-cd-sa}"
-    PROVIDER_ID="gh-p-$(echo "$REPO" | shasum -a 256 | cut -c1-25)"
+if command -v sha256sum >/dev/null; then
+    PROVIDER_HASH=$(echo -n "$REPO" | sha256sum | cut -c1-25)
+elif command -v shasum >/dev/null; then
+    PROVIDER_HASH=$(echo -n "$REPO" | shasum -a 256 | cut -c1-25)
+else
+    echo "Error: 'sha256sum' or 'shasum' command not found. Please install one to continue." >&2
+    exit 1
+fi
+PROVIDER_ID="gh-p-${PROVIDER_HASH}"
 
     validate_inputs
 
