@@ -146,6 +146,7 @@ allow_auth() {
             --project="$PROJECT_ID" \
             --role="$OLD_ROLE" \
             --member="$OLD_MEMBER" --no-user-output-enabled
+    fi
 
     grant_sa_iam_binding "$CD_SA_EMAIL" "principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:environment:production" "roles/iam.workloadIdentityUser"
 }
