@@ -51,12 +51,18 @@ gcloud iam service-accounts describe "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gservicea
 
 # 3. Grant the Service Account roles to deploy to Cloud Run
 echo "Granting roles to service account..."
-gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-    --member="serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
-    --role="roles/run.developer" || true
-gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-    --member="serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
-    --role="roles/iam.serviceAccountUser" || true
+# Grant roles/run.developer if it doesn't exist
+if ! gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com AND bindings.role:roles/run.developer" --format="value(bindings.role)" | grep -q "roles/run.developer"; then
+    gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+        --member="serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
+        --role="roles/run.developer"
+fi
+# Grant roles/iam.serviceAccountUser if it doesn't exist
+if ! gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com AND bindings.role:roles/iam.serviceAccountUser" --format="value(bindings.role)" | grep -q "roles/iam.serviceAccountUser"; then
+    gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+        --member="serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
+        --role="roles/iam.serviceAccountUser"
+fi
 
 # 4. Create a Workload Identity Pool and Provider if they don't exist
 echo "Checking for Workload Identity Pool 'github-pool'..."
@@ -80,12 +86,26 @@ gcloud iam workload-identity-pools providers describe "github-provider" --projec
         --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
         --attribute-condition="attribute.repository != ''")
 
-# 5. Allow authentications from your GitHub repo's main branch
+# 5. Allow authentications from your GitHub repo's production environment
 echo "Allowing authentications from GitHub repository..."
-gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
-    --project="$PROJECT_ID" \
-    --role="roles/iam.workloadIdentityUser" \
-    --member="principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:ref:refs/heads/main" || true
+
+# Remove old, less secure binding if it exists
+if gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:ref:refs/heads/main AND bindings.role:roles/iam.workloadIdentityUser" --format="value(bindings.role)" | grep -q "roles/iam.workloadIdentityUser"; then
+    echo "Removing old, less secure WIF binding..."
+    gcloud iam service-accounts remove-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
+        --project="$PROJECT_ID" \
+        --role="roles/iam.workloadIdentityUser" \
+        --member="principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:ref:refs/heads/main"
+fi
+
+# Add new, more secure binding if it doesn't exist
+if ! gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:environment:production AND bindings.role:roles/iam.workloadIdentityUser" --format="value(bindings.role)" | grep -q "roles/iam.workloadIdentityUser"; then
+    echo "Adding new, more secure WIF binding..."
+    gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
+        --project="$PROJECT_ID" \
+        --role="roles/iam.workloadIdentityUser" \
+        --member="principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:environment:production"
+fi
 
 # 6. Output the values needed for GitHub Secrets
 echo "---"

@@ -225,8 +225,9 @@ A helper script is provided to automate the creation of the necessary GCP resour
     export REPO="your-github-username/your-repo-name" # Replace with your GitHub repository (e.g., "octocat/Spoon-Knife")
     # export SERVICE_ACCOUNT="my-custom-sa" # Optional: defaults to "github-cd-sa"
     ```
-2.  **Run the script:**
+2.  **Run the script:** Make the script executable and then run it.
     ```bash
+    chmod +x ./scripts/setup_gcp_cd.sh
     ./scripts/setup_gcp_cd.sh
     ```
 
