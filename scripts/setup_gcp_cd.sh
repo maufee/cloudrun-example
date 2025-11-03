@@ -94,6 +94,7 @@ grant_iam_binding() {
 }
 
 grant_iam_binding "serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" "roles/run.developer" true
+grant_iam_binding "serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" "roles/iam.serviceAccountUser" true
 
 # Grant the CD service account permission to act as the Cloud Run runtime service account
 # This is required for new revisions of the service to be able to start.
