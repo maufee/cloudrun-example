@@ -199,6 +199,88 @@ gcloud run deploy cloudrun-example \
   --platform=managed
 ```
 
+## Continuous Deployment (CD) with GitHub Actions
+
+This project is configured for Continuous Deployment to Google Cloud Run using GitHub Actions. Once set up, any changes pushed to the `main` branch that pass the CI checks will be automatically deployed.
+
+### How it Works
+
+1.  **Trigger:** A push to the `main` branch triggers the workflow.
+2.  **CI Checks:** The `test-and-lint` job runs, ensuring code quality and correctness.
+3.  **CD Trigger:** If the `test-and-lint` job passes, the `deploy` job starts.
+4.  **Authentication:** The `deploy` job securely authenticates to Google Cloud using Workload Identity Federation.
+5.  **Deployment:** The application is deployed to Cloud Run using the `google-github-actions/deploy-cloudrun` action.
+
+### One-Time Setup for CD
+
+To enable Continuous Deployment, you need to perform a one-time setup in your Google Cloud project and GitHub repository. This involves creating a Google Cloud Service Account, configuring Workload Identity Federation, and setting up GitHub repository secrets.
+
+**1. In your Google Cloud Project:**
+
+Follow these steps to create a Service Account and configure Workload Identity Federation. Replace placeholders like `your-gcp-project-id` and `your-github-username/your-repo-name` with your actual values.
+
+```bash
+# Replace these with your own values
+export PROJECT_ID="your-gcp-project-id"
+export REPO="your-github-username/your-repo-name"
+export SERVICE_ACCOUNT="github-cd-sa" # A name for the new service account
+
+# 1. Enable necessary APIs
+gcloud services enable iam.googleapis.com \
+    iamcredentials.googleapis.com \
+    cloudresourcemanager.googleapis.com \
+    run.googleapis.com \
+    --project=$PROJECT_ID
+
+# 2. Create the Service Account
+gcloud iam service-accounts create $SERVICE_ACCOUNT \
+    --project=$PROJECT_ID
+
+# 3. Grant the Service Account roles to deploy to Cloud Run
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/run.admin"
+gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --member="serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
+    --role="roles/iam.serviceAccountUser"
+
+# 4. Create a Workload Identity Pool and Provider
+gcloud iam workload-identity-pools create "github-pool" \
+    --project=$PROJECT_ID \
+    --location="global" \
+    --display-name="GitHub Actions Pool"
+export POOL_ID=$(gcloud iam workload-identity-pools describe "github-pool" --project=$PROJECT_ID --location="global" --format="value(name)")
+
+gcloud iam workload-identity-pools providers create-oidc "github-provider" \
+    --project=$PROJECT_ID \
+    --location="global" \
+    --workload-identity-pool="github-pool" \
+    --issuer-uri="https://token.actions.githubusercontent.com" \
+    --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
+    --attribute-condition="attribute.repository != ''"
+
+# 5. Allow authentications from your GitHub repo's main branch
+gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
+    --project=$PROJECT_ID \
+    --role="roles/iam.workloadIdentityUser" \
+    --member="principalSet://iam.googleapis.com/$POOL_ID/attribute.repository/$REPO"
+```
+
+**2. In your GitHub Repository Settings:**
+
+First, create a deployment environment.
+1.  Go to **`Settings > Environments`** and click **`New environment`**.
+2.  Name it `production` and click **`Configure environment`**.
+
+Next, add the following secrets to the `production` environment you just created:
+1.  In the environment settings, find the **`Environment secrets`** section and click **`Add secret`** for each of the three secrets below.
+
+*   `GCP_PROJECT_ID`: Your Google Cloud Project ID (e.g., `your-gcp-project-id`).
+*   `GCP_WORKLOAD_IDENTITY_PROVIDER`: The full name of the provider you created. You can get this with:
+    `gcloud iam workload-identity-pools providers describe "github-provider" --project=$PROJECT_ID --location="global" --workload-identity-pool="github-pool" --format="value(name)"`
+*   `GCP_SERVICE_ACCOUNT`: The email address of the service account you created (e.g., `github-cd-sa@your-gcp-project-id.iam.gserviceaccount.com`).
+
+
 ## Project structure
 ```
 .
@@ -219,8 +301,25 @@ gcloud run deploy cloudrun-example \
 - Keep `requirements.txt` updated if you change pinned production dependencies.
 
 ## Contributing
-- Open issues or pull requests.
-- If you're adding functionality, include tests and update `requirements.txt` (or the `pyproject.toml` source) accordingly.
+
+Contributions are welcome! This project follows a standard fork-and-pull request workflow. Branch protection is enabled for the `main` branch.
+
+1.  **Fork** the repository to your own GitHub account.
+2.  **Clone** your fork to your local machine.
+3.  **Create a new branch** for your feature or bug fix (`git checkout -b my-new-feature`).
+4.  **Set up the environment** by running `uv sync --all-extras`.
+5.  **Make your changes.**
+    - If you add or change a dependency, modify `pyproject.toml` and then run `uv lock` to update the lock file.
+6.  **Run checks locally** to ensure your changes pass before pushing.
+    ```bash
+    # Run the linter
+    uv run ruff check .
+    # Run the test suite with coverage
+    uv run python -m pytest --cov
+    ```
+7.  **Commit and push** your changes to your fork.
+8.  **Open a pull request** from your fork's branch to the `main` branch of the original repository.
+9.  Your pull request will be reviewed after the automated CI checks have passed.
 
 ## License
 This project is licensed under the MIT License - see the `LICENSE` file for details.
