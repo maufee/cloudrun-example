@@ -232,7 +232,7 @@ A helper script is provided to automate the creation of the necessary GCP resour
     ./scripts/setup_gcp_cd.sh
     ```
 
-**2. In your GitHub Repository Settings:**
+2. **In your GitHub Repository Settings:**
 
 The script will output the exact names and values for the three secrets you need to create.
 
