@@ -34,7 +34,7 @@ grant_project_iam_binding() {
 
     echo "Ensuring project role '$role' is granted to '$member'..."
     local check
-    check=$(gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.role='$role' AND bindings.members:'$member'" --format="value(bindings.role)")
+    check=$(gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings" --filter="bindings.role = '$role' AND bindings.members:'$member' AND NOT bindings.condition" --format="value(bindings.role)")
     if [ -z "$check" ]; then gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null; fi
 }
 
