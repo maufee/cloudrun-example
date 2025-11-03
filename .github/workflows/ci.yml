@@ -24,7 +24,7 @@ jobs:
       - name: Set up uv
         uses: astral-sh/setup-uv@v1
         with:
-          uv-version: latest
+          version: latest
 
       - name: Install Dependencies
         run: uv sync --locked --all-extras
