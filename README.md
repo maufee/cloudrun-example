@@ -263,7 +263,7 @@ gcloud iam workload-identity-pools providers create-oidc "github-provider" \
 gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
     --project=$PROJECT_ID \
     --role="roles/iam.workloadIdentityUser" \
-    --member="principalSet://iam.googleapis.com/$POOL_ID/attribute.repository/$REPO"
+    --member="principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:ref:refs/heads/main"
 ```
 
 **2. In your GitHub Repository Settings:**
