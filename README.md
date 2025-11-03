@@ -225,6 +225,7 @@ A helper script is provided to automate the creation of the necessary GCP resour
       export PROJECT_ID="your-gcp-project-id" # Replace with your Google Cloud Project ID
       export REPO="your-github-username/your-repo-name" # Replace with your GitHub repository (e.g., "octocat/Spoon-Knife")
       # export SERVICE_ACCOUNT="my-custom-sa" # Optional: defaults to "github-cd-sa"
+      # export GCP_RUNTIME_SA="my-run-sa@my-project.iam.gserviceaccount.com" # Optional: The service account for your Cloud Run service.
       ```
   -  **Run the script:** Make the script executable and then run it:
       ```bash
