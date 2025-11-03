@@ -167,7 +167,7 @@ This project is deployed to Cloud Run using the **source deployment** method, wh
 Cloud Run's build process uses the standard `requirements.txt` file. To ensure the versions in this file exactly match your development environment (defined by `uv.lock`), generate it using the following command. The `--exclude-editable` flag prevents your local project from being included in the file.
 
 ```bash
-uv pip freeze --exclude-editable > requirements.txt
+uv pip compile pyproject.toml --output-file=requirements.txt
 ```
 
 ### 2. Understand the `Procfile`
