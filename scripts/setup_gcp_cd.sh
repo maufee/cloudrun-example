@@ -35,7 +35,12 @@ grant_project_iam_binding() {
     echo "Ensuring project role '$role' is granted to '$member'..."
     local check
     check=$(gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings" --filter="bindings.role = '$role' AND bindings.members:'$member' AND NOT bindings.condition" --format="value(bindings.role)")
-    if [ -z "$check" ]; then gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None --no-user-output-enabled > /dev/null; fi
+    if [ -z "$check" ]; then
+        gcloud projects add-iam-policy-binding "$PROJECT_ID" \
+            --member="$member" \
+            --role="$role" \
+            --condition=None --no-user-output-enabled > /dev/null
+    fi
 }
 
 # Function to idempotently grant a role on a service account.

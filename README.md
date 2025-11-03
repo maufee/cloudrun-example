@@ -166,7 +166,7 @@ This project is deployed to Cloud Run using the **source deployment** method, wh
 
 ### 1. Generate `requirements.txt`
 
-Cloud Run's build process uses the standard `requirements.txt` file. To ensure the versions in this file exactly match your development environment (defined by `uv.lock`), generate it using the following command. The `--exclude-editable` flag prevents your local project from being included in the file.
+Cloud Run's build process uses the standard `requirements.txt` file. To ensure the versions in this file exactly match your development environment (defined by `uv.lock`), generate it using the following command.
 
 ```bash
 uv pip compile pyproject.toml --output-file=requirements.txt
