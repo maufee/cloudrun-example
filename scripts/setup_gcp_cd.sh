@@ -57,19 +57,15 @@ grant_iam_binding() {
     local member=$1
     local role=$2
     local is_project_level=$3
-    local policy_exists=false
+    local policy_exists_cmd
 
     if [ "$is_project_level" = true ]; then
-        if gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:\"$member\" AND bindings.role:\"$role\"" --format="value(bindings.role)" | grep -q "."; then
-            policy_exists=true
-        fi
+        policy_exists_cmd="gcloud projects get-iam-policy \"$PROJECT_ID\" --flatten=\"bindings[].members\" --filter=\"bindings.members:'$member' AND bindings.role:'$role'\" --format=\"value(bindings.role)\" | grep -q \".\""
     else
-        if gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:\"$member\" AND bindings.role:\"$role\"" --format="value(bindings.role)" | grep -q "."; then
-            policy_exists=true
-        fi
+        policy_exists_cmd="gcloud iam service-accounts get-iam-policy \"$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com\" --project=\"$PROJECT_ID\" --flatten=\"bindings[].members\" --filter=\"bindings.members:'$member' AND bindings.role:'$role'\" --format=\"value(bindings.role)\" | grep -q \".\""
     fi
 
-    if [ "$policy_exists" = false ]; then
+    if ! eval "$policy_exists_cmd"; then
         echo "Adding $role..."
         if [ "$is_project_level" = true ]; then
             gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
