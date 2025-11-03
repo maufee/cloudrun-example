@@ -87,7 +87,7 @@ grant_iam_binding() {
     else
         local sa_email="$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com"
         # Idempotently grant service-account-level role by checking if it exists first.
-        if ! gcloud iam service-accounts get-iam-policy "$sa_email" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:'serviceAccount:$CD_SA_EMAIL' AND bindings.role='roles/iam.serviceAccountUser'" --format="value(bindings.role)" | grep -q "."; then
+        if ! gcloud iam service-accounts get-iam-policy "$sa_email" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.role='$role' AND bindings.members:'$member'" --format="value(bindings.role)" | grep -q "."; then
             gcloud iam service-accounts add-iam-policy-binding "$sa_email" --project="$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
         fi
     fi
