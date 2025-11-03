@@ -165,7 +165,7 @@ allow_auth() {
     local OLD_MEMBER="principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:ref:refs/heads/main"
     local OLD_ROLE="roles/iam.workloadIdentityUser"
     local old_binding_exists
-    old_binding_exists=$(gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:'$OLD_MEMBER' AND bindings.role:'$OLD_ROLE'" --format="value(bindings.role)")
+    old_binding_exists=$(gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings" --filter="bindings.role = '$OLD_ROLE' AND bindings.members:'$OLD_MEMBER'" --format="value(bindings.role)")
     if [ -n "$old_binding_exists" ]; then
         echo "Removing old, less secure WIF binding..."
         gcloud iam service-accounts remove-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
