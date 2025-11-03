@@ -111,7 +111,7 @@ gcloud iam workload-identity-pools providers describe "github-provider" --projec
 echo "Allowing authentications from GitHub repository..."
 
 # Remove old, less secure binding if it exists
-if gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members='principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:ref:refs/heads/main' AND bindings.role='roles/iam.workloadIdentityUser'" --format="value(bindings.role)" | grep -q "."; then
+if gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:\"principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:ref:refs/heads/main\" AND bindings.role:\"roles/iam.workloadIdentityUser\"" --format="value(bindings.role)" | grep -q "."; then
     echo "Removing old, less secure WIF binding..."
     gcloud iam service-accounts remove-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
         --project="$PROJECT_ID" \
