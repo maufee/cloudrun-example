@@ -77,6 +77,7 @@ grant_roles() {
     grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "roles/run.developer"
 
     echo "Granting permission to impersonate the Cloud Run runtime service account..."
+    local PROJECT_NUMBER
     PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
     if [ -z "$PROJECT_NUMBER" ]; then
       echo "Error: Failed to retrieve project number for project '$PROJECT_ID'." >&2
@@ -91,7 +92,7 @@ grant_roles() {
       fi
     fi
 
-    RUNTIME_SA_EMAIL="${GCP_RUNTIME_SA:-${PROJECT_NUMBER}-compute@developer.gserviceaccount.com}"
+    local RUNTIME_SA_EMAIL="${GCP_RUNTIME_SA:-${PROJECT_NUMBER}-compute@developer.gserviceaccount.com}"
 
     if [ -z "${GCP_RUNTIME_SA:-}" ]; then
       echo "Verifying default Compute Engine service account (${RUNTIME_SA_EMAIL}) exists..."
@@ -99,7 +100,7 @@ grant_roles() {
         echo "Error: The default Compute Engine service account was not found." >&2
         echo "This can happen on new projects. Please either:" >&2
         echo "1. Enable the Compute Engine API on project '${PROJECT_ID}' by running:" >&2
-        echo "   gcloud services enable compute.googleapis.com --project=\"${PROJECT_ID}\"" >&2
+        echo "   gcloud services enable compute.googleapis.com --project=\"${PROJECT_ID}\""> &2
         echo "2. Or, create a dedicated runtime service account and provide it via the 'GCP_RUNTIME_SA' environment variable." >&2
         exit 1
       fi
