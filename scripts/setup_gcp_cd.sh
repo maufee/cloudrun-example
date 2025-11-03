@@ -60,11 +60,11 @@ grant_iam_binding() {
     local policy_exists=false
 
     if [ "$is_project_level" = true ]; then
-        if gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:'$member' AND bindings.role='$role'" --format="value(bindings.role)" | grep -q "."; then
+        if gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:\"$member\" AND bindings.role:\"$role\"" --format="value(bindings.role)" | grep -q "."; then
             policy_exists=true
         fi
     else
-        if gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:'$member' AND bindings.role='$role'" --format="value(bindings.role)" | grep -q "."; then
+        if gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:\"$member\" AND bindings.role:\"$role\"" --format="value(bindings.role)" | grep -q "."; then
             policy_exists=true
         fi
     fi
