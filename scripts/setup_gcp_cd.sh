@@ -52,16 +52,14 @@ gcloud iam service-accounts describe "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gservicea
 # 3. Grant the Service Account roles to deploy to Cloud Run
 echo "Granting roles to service account..."
 # Grant roles/run.developer if it doesn't exist
-if ! gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com AND bindings.role:roles/run.developer" --format="value(bindings.role)" | grep -q "roles/run.developer"; then
-    gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-        --member="serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
-        --role="roles/run.developer"
+if ! gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:'serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com' AND bindings.role='roles/run.developer'" --format="value(bindings.role)" | grep -q "."; then
+    echo "Adding roles/run.developer..."
+    gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --role="roles/run.developer" --condition=None > /dev/null
 fi
 # Grant roles/iam.serviceAccountUser if it doesn't exist
-if ! gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com AND bindings.role:roles/iam.serviceAccountUser" --format="value(bindings.role)" | grep -q "roles/iam.serviceAccountUser"; then
-    gcloud projects add-iam-policy-binding "$PROJECT_ID" \
-        --member="serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
-        --role="roles/iam.serviceAccountUser"
+if ! gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:'serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com' AND bindings.role='roles/iam.serviceAccountUser'" --format="value(bindings.role)" | grep -q "."; then
+    echo "Adding roles/iam.serviceAccountUser..."
+    gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --role="roles/iam.serviceAccountUser" --condition=None > /dev/null
 fi
 
 # 4. Create a Workload Identity Pool and Provider if they don't exist
@@ -99,12 +97,14 @@ if gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.
 fi
 
 # Add new, more secure binding if it doesn't exist
-if ! gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:environment:production AND bindings.role:roles/iam.workloadIdentityUser" --format="value(bindings.role)" | grep -q "roles/iam.workloadIdentityUser"; then
+if ! gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:environment:production AND bindings.role:roles/iam.workloadIdentityUser" --format="value(bindings.role)" | grep -q "."; then
     echo "Adding new, more secure WIF binding..."
     gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
         --project="$PROJECT_ID" \
         --role="roles/iam.workloadIdentityUser" \
-        --member="principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:environment:production"
+        --member="principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:environment:production" > /dev/null
+else
+    echo "Secure WIF binding already exists, skipping."
 fi
 
 # 6. Output the values needed for GitHub Secrets
