@@ -77,7 +77,7 @@ grant_iam_binding() {
     if [ "$is_project_level" = true ]; then
         gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
     else
-        gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --member="$member" --role="$role" > /dev/null
+        gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
     fi
 }
 
