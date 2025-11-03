@@ -1,5 +1,10 @@
 #!/bin/bash
 set -euo pipefail
+# Check for gcloud CLI
+if ! command -v gcloud &> /dev/null; then
+    echo "Error: gcloud command not found. Please install the Google Cloud SDK and ensure it's in your PATH." >&2
+    exit 1
+fi
 
 # Description: This script performs the one-time setup in a Google Cloud project
 # to enable Continuous Deployment from a GitHub repository using Workload Identity Federation.
