@@ -83,7 +83,7 @@ grant_iam_binding() {
         add_policy_cmd=(gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --member="$member" --role="$role")
     fi
 
-    if ! "${get_policy_cmd[@]}" | grep -q "."; then
+    if [ -z "$(${get_policy_cmd[@]})" ]; then
         echo "Adding $role..."
         "${add_policy_cmd[@]}" > /dev/null
     else
