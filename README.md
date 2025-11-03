@@ -264,6 +264,18 @@ gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID
     --project=$PROJECT_ID \
     --role="roles/iam.workloadIdentityUser" \
     --member="principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:ref:refs/heads/main"
+
+# 6. Output the values needed for GitHub Secrets
+echo "---"
+echo "Copy these values into your GitHub repository's 'production' environment secrets:"
+echo "GCP_PROJECT_ID: $PROJECT_ID"
+WIF_PROVIDER=$(gcloud iam workload-identity-pools providers describe "github-provider" \
+    --project="$PROJECT_ID" \
+    --location="global" \
+    --workload-identity-pool="github-pool" \
+    --format="value(name)")
+echo "GCP_WORKLOAD_IDENTITY_PROVIDER: $WIF_PROVIDER"
+echo "GCP_SERVICE_ACCOUNT: $SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com"
 ```
 
 **2. In your GitHub Repository Settings:**
@@ -272,13 +284,9 @@ First, create a deployment environment.
 1.  Go to **`Settings > Environments`** and click **`New environment`**.
 2.  Name it `production` and click **`Configure environment`**.
 
-Next, add the following secrets to the `production` environment you just created:
-1.  In the environment settings, find the **`Environment secrets`** section and click **`Add secret`** for each of the three secrets below.
-
-*   `GCP_PROJECT_ID`: Your Google Cloud Project ID (e.g., `your-gcp-project-id`).
-*   `GCP_WORKLOAD_IDENTITY_PROVIDER`: The full name of the provider you created. You can get this with:
-    `gcloud iam workload-identity-pools providers describe "github-provider" --project=$PROJECT_ID --location="global" --workload-identity-pool="github-pool" --format="value(name)"`
-*   `GCP_SERVICE_ACCOUNT`: The email address of the service account you created (e.g., `github-cd-sa@your-gcp-project-id.iam.gserviceaccount.com`).
+Next, add the secrets to the `production` environment:
+1.  In the environment settings, find the **`Environment secrets`** section and click **`Add secret`** for each secret.
+2.  Copy the values that were printed in your terminal from the final step of the setup script.
 
 
 ## Project structure
