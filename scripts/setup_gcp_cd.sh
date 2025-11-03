@@ -72,44 +72,39 @@ gcloud iam service-accounts describe "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gservicea
 # 3. Grant the Service Account roles to deploy to Cloud Run
 echo "Granting roles to service account..."
 
-# Function to grant IAM policy binding if it doesn't exist
-grant_iam_binding() {
+# Function to idempotently grant a project-level IAM role.
+grant_project_iam_binding() {
     local member=$1
     local role=$2
-    local is_project_level=$3
 
-    echo "Ensuring role '$role' is granted to '$member'..."
-    if [ "$is_project_level" = true ]; then
-        # Idempotently grant project-level role by checking if it exists first.
-        if ! gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.role='$role' AND bindings.members:'$member'" --format="value(bindings.role)" | grep -q "."; then
-            gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
-        fi
-    else
-        local sa_email="$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com"
-        # Idempotently grant service-account-level role by checking if it exists first.
-        if ! gcloud iam service-accounts get-iam-policy "$sa_email" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.role='$role' AND bindings.members:'$member'" --format="value(bindings.role)" | grep -q "."; then
-            gcloud iam service-accounts add-iam-policy-binding "$sa_email" --project="$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
-        fi
+    echo "Ensuring project role '$role' is granted to '$member'..."
+    if ! gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.role='$role' AND bindings.members:'$member'" --format="value(bindings.role)" | grep -q "."; then
+        gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
     fi
 }
 
-grant_iam_binding "serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" "roles/run.developer" true
+# Function to idempotently grant a role on a service account.
+grant_sa_iam_binding() {
+    local sa_email=$1
+    local member=$2
+    local role=$3
+
+    echo "Ensuring SA role '$role' is granted to '$member' on '$sa_email'..."
+    if ! gcloud iam service-accounts get-iam-policy "$sa_email" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.role='$role' AND bindings.members:'$member'" --format="value(bindings.role)" | grep -q "."; then
+        gcloud iam service-accounts add-iam-policy-binding "$sa_email" --project="$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
+    fi
+}
+
+CD_SA_EMAIL="$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com"
+grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "roles/run.developer"
 
 # Grant the CD service account permission to act as the Cloud Run runtime service account
 # This is required for new revisions of the service to be able to start.
 echo "Granting permission to impersonate the Cloud Run runtime service account..."
 PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
 RUNTIME_SA_EMAIL="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
-CD_SA_EMAIL="$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com"
 
-# Idempotently grant the iam.serviceAccountUser role.
-if ! gcloud iam service-accounts get-iam-policy "$RUNTIME_SA_EMAIL" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.role='roles/iam.serviceAccountUser' AND bindings.members:'serviceAccount:$CD_SA_EMAIL'" --format="value(bindings.role)" | grep -q "."; then
-    gcloud iam service-accounts add-iam-policy-binding "$RUNTIME_SA_EMAIL" \
-        --project="$PROJECT_ID" \
-        --role="roles/iam.serviceAccountUser" \
-        --member="serviceAccount:$CD_SA_EMAIL" \
-        --condition=None > /dev/null
-fi
+grant_sa_iam_binding "$RUNTIME_SA_EMAIL" "serviceAccount:$CD_SA_EMAIL" "roles/iam.serviceAccountUser"
 
 
 # 4. Create a Workload Identity Pool and Provider if they don't exist
@@ -149,7 +144,7 @@ if gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.
 fi
 
 # Add new, more secure binding if it doesn't exist
-grant_iam_binding "principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:environment:production" "roles/iam.workloadIdentityUser" false
+grant_sa_iam_binding "$CD_SA_EMAIL" "principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:environment:production" "roles/iam.workloadIdentityUser"
 
 
 # 6. Output the values needed for GitHub Secrets
