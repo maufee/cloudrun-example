@@ -75,9 +75,16 @@ grant_iam_binding() {
 
     echo "Ensuring role '$role' is granted to '$member'..."
     if [ "$is_project_level" = true ]; then
-        gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
+        # Idempotently grant project-level role by checking if it exists first.
+        if ! gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.role='$role' AND bindings.members:'$member'" --format="value(bindings.role)" | grep -q "."; then
+            gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
+        fi
     else
-        gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
+        local sa_email="$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com"
+        # Idempotently grant service-account-level role by checking if it exists first.
+        if ! gcloud iam service-accounts get-iam-policy "$sa_email" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.role='$role' AND bindings.members:'$member'" --format="value(bindings.role)" | grep -q "."; then
+            gcloud iam service-accounts add-iam-policy-binding "$sa_email" --project="$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
+        fi
     fi
 }
 
