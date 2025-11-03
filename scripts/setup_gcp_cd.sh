@@ -153,7 +153,7 @@ gcloud iam workload-identity-pools providers describe "github-provider" --projec
         --workload-identity-pool="github-pool" \
         --issuer-uri="https://token.actions.githubusercontent.com" \
         --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
-        --attribute-condition="attribute.repository == '$REPO'"
+        --attribute-condition="attribute.repository == '$REPO'")
 
 # 5. Allow authentications from your GitHub repo's production environment
 echo "Allowing authentications from GitHub repository..."
