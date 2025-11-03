@@ -271,7 +271,7 @@ Contributions are welcome! This project follows a standard fork-and-pull request
 3.  **Create a new branch** for your feature or bug fix (`git checkout -b my-new-feature`).
 4.  **Set up the environment** by running `uv sync --all-extras`.
 5.  **Make your changes.**
-    - If you add or change a dependency, modify `pyproject.toml`, then run `uv sync --all-extras` to update the lock file and environment, and finally regenerate the production requirements with `uv pip freeze --exclude-editable > requirements.txt`.
+    - If you add or change a dependency, modify `pyproject.toml` and then run `./scripts/sync-deps.sh` to update the lock file, virtual environment, and production requirements.
 6.  **Run checks locally** to ensure your changes pass before pushing.
     ```bash
     # Run the linter
