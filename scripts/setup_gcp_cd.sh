@@ -111,12 +111,17 @@ grant_roles() {
     if [ -z "${GCP_RUNTIME_SA:-}" ]; then
       echo "Verifying default Compute Engine service account (${RUNTIME_SA_EMAIL}) exists..."
       if ! gcloud iam service-accounts describe "${RUNTIME_SA_EMAIL}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
-        echo "Error: The default Compute Engine service account was not found." >&2
-        echo "This can happen on new projects. Please either:" >&2
-        echo "1. Enable the Compute Engine API on project '${PROJECT_ID}' by running:" >&2
-                echo "   gcloud services enable compute.googleapis.com --project=\"${PROJECT_ID}\"" >&2
-        echo "2. Or, create a dedicated runtime service account and provide it via the 'GCP_RUNTIME_SA' environment variable." >&2
-        exit 1
+        echo "Default Compute Engine service account not found. This is common on new projects." >&2
+        echo "Attempting to enable the Compute Engine API to create it..." >&2
+        gcloud services enable compute.googleapis.com --project="${PROJECT_ID}"
+        echo "API enabled. Waiting 60 seconds for the default service account to be provisioned..." >&2
+        sleep 60
+
+        if ! gcloud iam service-accounts describe "${RUNTIME_SA_EMAIL}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
+            echo "Error: The default Compute Engine service account is still not available." >&2
+            echo "Please try running the script again in a few minutes, or create a dedicated runtime service account and provide it via the 'GCP_RUNTIME_SA' environment variable." >&2
+            exit 1
+        fi
       fi
     fi
     grant_sa_iam_binding "$RUNTIME_SA_EMAIL" "serviceAccount:$CD_SA_EMAIL" "roles/iam.serviceAccountUser"
