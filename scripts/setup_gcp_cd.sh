@@ -27,6 +27,29 @@ validate_inputs() {
     fi
 }
 
+# Function to idempotently grant a project-level IAM role.
+grant_project_iam_binding() {
+    local member=$1
+    local role=$2
+
+    echo "Ensuring project role '$role' is granted to '$member'..."
+    local check
+    check=$(gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.role='$role' AND bindings.members:'$member'" --format="value(bindings.role)")
+    if [ -z "$check" ]; then gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null; fi
+}
+
+# Function to idempotently grant a role on a service account.
+grant_sa_iam_binding() {
+    local sa_email=$1
+    local member=$2
+    local role=$3
+
+    echo "Ensuring SA role '$role' is granted to '$member' on '$sa_email'..."
+    local check
+    check=$(gcloud iam service-accounts get-iam-policy "$sa_email" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.role='$role' AND bindings.members:'$member'" --format="value(bindings.role)")
+    if [ -z "$check" ]; then gcloud iam service-accounts add-iam-policy-binding "$sa_email" --project="$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null; fi
+}
+
 # Enable necessary APIs
 enable_apis() {
     echo "Enabling required Google Cloud services..."
