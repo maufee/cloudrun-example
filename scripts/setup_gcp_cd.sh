@@ -139,6 +139,10 @@ gcloud iam workload-identity-pools describe "github-pool" --project="$PROJECT_ID
         --display-name="GitHub Actions Pool")
 
 POOL_ID=$(gcloud iam workload-identity-pools describe "github-pool" --project="$PROJECT_ID" --location="global" --format="value(name)")
+if [ -z "$POOL_ID" ]; then
+    echo "Error: Failed to retrieve Workload Identity Pool ID for 'github-pool'." >&2
+    exit 1
+fi
 
 echo "Checking for Workload Identity Provider 'github-provider'..."
 gcloud iam workload-identity-pools providers describe "github-provider" --project="$PROJECT_ID" --location="global" --workload-identity-pool="github-pool" >/dev/null || \
@@ -149,7 +153,7 @@ gcloud iam workload-identity-pools providers describe "github-provider" --projec
         --workload-identity-pool="github-pool" \
         --issuer-uri="https://token.actions.githubusercontent.com" \
         --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
-        --attribute-condition="attribute.repository != ''")
+        --attribute-condition="attribute.repository == '$REPO'"
 
 # 5. Allow authentications from your GitHub repo's production environment
 echo "Allowing authentications from GitHub repository..."
