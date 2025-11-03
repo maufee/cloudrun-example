@@ -133,7 +133,6 @@ create_wif() {
 # Allow authentications from your GitHub repo's production environment
 allow_auth() {
     echo "Allowing authentications from GitHub repository..."
-    POOL_ID=$(gcloud iam workload-identity-pools describe "github-pool" --project="$PROJECT_ID" --location="global" --format="value(name)")
     CD_SA_EMAIL="$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com"
 
     OLD_MEMBER="principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:ref:refs/heads/main"
