@@ -237,7 +237,7 @@ The script will output the exact names and values for the three secrets you need
 
 1.  Go to **`Settings > Environments`** and click **`New environment`**.
 2.  Name it `production` and click **`Configure environment`**.
-3.  In the environment settings, find the **`Environment secrets`** section and click **`Add secret`** for each of the three secrets.
+3.  In the environment settings, find the **`Environment secrets`** section and click **`Add secret`** for each of the three secrets (`GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, and `GCP_SERVICE_ACCOUNT`).
 4.  Copy the values that were printed in your terminal from the final step of the setup script.
 
 
