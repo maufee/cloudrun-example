@@ -315,16 +315,5 @@ timeout = "10"
 timeout_func_only = true
 ```
 
-### Q: Why did `uv.lock` and `requirements.txt` have different package versions?
 
-**A:** You astutely observed that different `uv` commands can sometimes resolve dependencies to different versions. This can create a dangerous inconsistency between your local development environment and the production build.
-
-**The Solution:** The workflow in this project is now designed to prevent this. We use `uv.lock` as the primary source of truth for the local environment, and then generate `requirements.txt` *from* that locked environment, ensuring a perfect match.
-
-The correct workflow is:
-
-1.  `uv sync` (To generate `uv.lock` and install exact versions locally)
-2.  `uv pip freeze --exclude-editable > requirements.txt` (To generate a clean `requirements.txt` for production that matches the local environment)
-
-This guarantees your local environment perfectly mirrors the one Cloud Run will build.
 
