@@ -72,25 +72,20 @@ grant_iam_binding() {
     local member=$1
     local role=$2
     local is_project_level=$3
+    local get_policy_cmd
+    local add_policy_cmd
 
-    local binding_exists=false
     if [ "$is_project_level" = true ]; then
-        if gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:'$member' AND bindings.role:'$role'" --format="value(bindings.role)" 2>/dev/null | grep -q "."; then
-            binding_exists=true
-        fi
+        get_policy_cmd=(gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:'$member' AND bindings.role:'$role'" --format="value(bindings.role)")
+        add_policy_cmd=(gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None)
     else
-        if gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:'$member' AND bindings.role:'$role'" --format="value(bindings.role)" 2>/dev/null | grep -q "."; then
-            binding_exists=true
-        fi
+        get_policy_cmd=(gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="bindings.members:'$member' AND bindings.role:'$role'" --format="value(bindings.role)")
+        add_policy_cmd=(gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --member="$member" --role="$role")
     fi
 
-    if [ "$binding_exists" = "false" ]; then
+    if ! "${get_policy_cmd[@]}" 2>/dev/null | grep -q "."; then
         echo "Adding $role..."
-        if [ "$is_project_level" = true ]; then
-            gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
-        else
-            gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --member="$member" --role="$role" > /dev/null
-        fi
+        "${add_policy_cmd[@]}" > /dev/null
     else
         echo "$role binding already exists, skipping."
     fi
