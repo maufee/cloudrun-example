@@ -102,6 +102,16 @@ grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "roles/run.developer"
 # This is required for new revisions of the service to be able to start.
 echo "Granting permission to impersonate the Cloud Run runtime service account..."
 PROJECT_NUMBER=$(gcloud projects describe "$PROJECT_ID" --format="value(projectNumber)")
+
+# If a custom runtime SA is provided, validate it exists.
+if [ -n "${GCP_RUNTIME_SA:-}" ]; then
+  echo "Validating provided GCP_RUNTIME_SA: ${GCP_RUNTIME_SA}..."
+  if ! gcloud iam service-accounts describe "${GCP_RUNTIME_SA}" --project="${PROJECT_ID}" >/dev/null 2>&1; then
+    echo "Error: The service account specified in GCP_RUNTIME_SA ('${GCP_RUNTIME_SA}') does not exist in project '${PROJECT_ID}'." >&2
+    exit 1
+  fi
+fi
+
 # Default to the Compute Engine default SA, but allow overriding via an environment variable.
 RUNTIME_SA_EMAIL="${GCP_RUNTIME_SA:-${PROJECT_NUMBER}-compute@developer.gserviceaccount.com}"
 grant_sa_iam_binding "$RUNTIME_SA_EMAIL" "serviceAccount:$CD_SA_EMAIL" "roles/iam.serviceAccountUser"
