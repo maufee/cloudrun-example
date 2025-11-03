@@ -220,48 +220,64 @@ To enable Continuous Deployment, you need to perform a one-time setup in your Go
 Follow these steps to create a Service Account and configure Workload Identity Federation. Replace placeholders like `your-gcp-project-id` and `your-github-username/your-repo-name` with your actual values.
 
 ```bash
+set -euo pipefail
+
 # Replace these with your own values
 export PROJECT_ID="your-gcp-project-id"
 export REPO="your-github-username/your-repo-name"
 export SERVICE_ACCOUNT="github-cd-sa" # A name for the new service account
 
 # 1. Enable necessary APIs
+echo "Enabling required Google Cloud services..."
 gcloud services enable iam.googleapis.com \
     iamcredentials.googleapis.com \
     cloudresourcemanager.googleapis.com \
     run.googleapis.com \
-    --project=$PROJECT_ID
+    --project="$PROJECT_ID"
 
-# 2. Create the Service Account
-gcloud iam service-accounts create $SERVICE_ACCOUNT \
-    --project=$PROJECT_ID
+# 2. Create the Service Account if it doesn't exist
+echo "Checking for service account: $SERVICE_ACCOUNT"
+gcloud iam service-accounts describe "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" &>/dev/null || \
+    (echo "Service account not found, creating..." && \
+    gcloud iam service-accounts create "$SERVICE_ACCOUNT" \
+        --project="$PROJECT_ID" \
+        --display-name="GitHub Actions CD Service Account")
 
 # 3. Grant the Service Account roles to deploy to Cloud Run
-gcloud projects add-iam-policy-binding $PROJECT_ID \
+echo "Granting roles to service account..."
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
     --member="serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
-    --role="roles/run.admin"
-gcloud projects add-iam-policy-binding $PROJECT_ID \
+    --role="roles/run.developer"
+gcloud projects add-iam-policy-binding "$PROJECT_ID" \
     --member="serviceAccount:$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
     --role="roles/iam.serviceAccountUser"
 
-# 4. Create a Workload Identity Pool and Provider
-gcloud iam workload-identity-pools create "github-pool" \
-    --project=$PROJECT_ID \
-    --location="global" \
-    --display-name="GitHub Actions Pool"
-export POOL_ID=$(gcloud iam workload-identity-pools describe "github-pool" --project=$PROJECT_ID --location="global" --format="value(name)")
+# 4. Create a Workload Identity Pool and Provider if they don't exist
+echo "Checking for Workload Identity Pool 'github-pool'..."
+gcloud iam workload-identity-pools describe "github-pool" --project="$PROJECT_ID" --location="global" &>/dev/null || \
+    (echo "Pool not found, creating..." && \
+    gcloud iam workload-identity-pools create "github-pool" \
+        --project="$PROJECT_ID" \
+        --location="global" \
+        --display-name="GitHub Actions Pool")
 
-gcloud iam workload-identity-pools providers create-oidc "github-provider" \
-    --project=$PROJECT_ID \
-    --location="global" \
-    --workload-identity-pool="github-pool" \
-    --issuer-uri="https://token.actions.githubusercontent.com" \
-    --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
-    --attribute-condition="attribute.repository != ''"
+POOL_ID=$(gcloud iam workload-identity-pools describe "github-pool" --project="$PROJECT_ID" --location="global" --format="value(name)")
+
+echo "Checking for Workload Identity Provider 'github-provider'..."
+gcloud iam workload-identity-pools providers describe "github-provider" --project="$PROJECT_ID" --location="global" --workload-identity-pool="github-pool" &>/dev/null || \
+    (echo "Provider not found, creating..." && \
+    gcloud iam workload-identity-pools providers create-oidc "github-provider" \
+        --project="$PROJECT_ID" \
+        --location="global" \
+        --workload-identity-pool="github-pool" \
+        --issuer-uri="https://token.actions.githubusercontent.com" \
+        --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
+        --attribute-condition="attribute.repository != ''")
 
 # 5. Allow authentications from your GitHub repo's main branch
+echo "Allowing authentications from GitHub repository..."
 gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" \
-    --project=$PROJECT_ID \
+    --project="$PROJECT_ID" \
     --role="roles/iam.workloadIdentityUser" \
     --member="principal://iam.googleapis.com/$POOL_ID/subject/repo:$REPO:ref:refs/heads/main"
 
@@ -317,7 +333,7 @@ Contributions are welcome! This project follows a standard fork-and-pull request
 3.  **Create a new branch** for your feature or bug fix (`git checkout -b my-new-feature`).
 4.  **Set up the environment** by running `uv sync --all-extras`.
 5.  **Make your changes.**
-    - If you add or change a dependency, modify `pyproject.toml` and then run `uv lock` to update the lock file.
+    - If you add or change a dependency, modify `pyproject.toml`, then run `uv lock` to update the lock file, and finally regenerate the production requirements with `uv pip freeze --exclude-editable > requirements.txt`.
 6.  **Run checks locally** to ensure your changes pass before pushing.
     ```bash
     # Run the linter
