@@ -72,24 +72,12 @@ grant_iam_binding() {
     local member=$1
     local role=$2
     local is_project_level=$3
-    local filter_str="bindings.members:'$member' AND bindings.role:'$role'"
-    local policy_output
 
+    echo "Ensuring role '$role' is granted to '$member'..."
     if [ "$is_project_level" = true ]; then
-        policy_output=$(gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings[].members" --filter="$filter_str" --format="value(bindings.role)")
+        gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
     else
-        policy_output=$(gcloud iam service-accounts get-iam-policy "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --flatten="bindings[].members" --filter="$filter_str" --format="value(bindings.role)")
-    fi
-
-    if [ -z "$policy_output" ]; then
-        echo "Adding $role..."
-        if [ "$is_project_level" = true ]; then
-            gcloud projects add-iam-policy-binding "$PROJECT_ID" --member="$member" --role="$role" --condition=None > /dev/null
-        else
-            gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --member="$member" --role="$role" > /dev/null
-        fi
-    else
-        echo "$role binding already exists, skipping."
+        gcloud iam service-accounts add-iam-policy-binding "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" --member="$member" --role="$role" > /dev/null
     fi
 }
 
