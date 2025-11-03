@@ -118,10 +118,10 @@ create_wif() {
         exit 1
     fi
 
-    echo "Checking for Workload Identity Provider 'gh-provider-$(echo "$REPO" | tr '/' '-')'..."
-    gcloud iam workload-identity-pools providers describe "gh-provider-$(echo "$REPO" | tr '/' '-')" --project="$PROJECT_ID" --location="global" --workload-identity-pool="github-pool" >/dev/null || \
+    echo "Checking for Workload Identity Provider '$PROVIDER_ID'..."
+    gcloud iam workload-identity-pools providers describe "$PROVIDER_ID" --project="$PROJECT_ID" --location="global" --workload-identity-pool="github-pool" >/dev/null || \
         (echo "Provider not found, creating..." && \
-        gcloud iam workload-identity-pools providers create-oidc "gh-provider-$(echo "$REPO" | tr '/' '-')" \
+        gcloud iam workload-identity-pools providers create-oidc "$PROVIDER_ID" \
             --project="$PROJECT_ID" \
             --location="global" \
             --workload-identity-pool="github-pool" \
@@ -154,7 +154,7 @@ print_results() {
     echo "---"
     echo "Setup complete! Copy these values into your GitHub repository's 'production' environment secrets:"
     echo "GCP_PROJECT_ID: $PROJECT_ID"
-    WIF_PROVIDER=$(gcloud iam workload-identity-pools providers describe "gh-provider-$(echo "$REPO" | tr '/' '-')" \
+    WIF_PROVIDER=$(gcloud iam workload-identity-pools providers describe "$PROVIDER_ID" \
         --project="$PROJECT_ID" \
         --location="global" \
         --workload-identity-pool="github-pool" \
@@ -182,6 +182,7 @@ main() {
     fi
 
     SERVICE_ACCOUNT="${SERVICE_ACCOUNT:-github-cd-sa}"
+    PROVIDER_ID="gh-p-$(echo "$REPO" | shasum -a 256 | cut -c1-25)"
 
     validate_inputs
 
@@ -189,6 +190,7 @@ main() {
     echo "Project ID: ${PROJECT_ID}"
     echo "Repository: ${REPO}"
     echo "Service Account: ${SERVICE_ACCOUNT}"
+    echo "Provider ID: ${PROVIDER_ID}"
     echo "---------------------------"
 
     enable_apis
