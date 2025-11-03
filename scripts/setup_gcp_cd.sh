@@ -63,11 +63,12 @@ enable_apis() {
 # Create the Service Account if it doesn't exist
 create_service_account() {
     echo "Checking for service account: $SERVICE_ACCOUNT"
-    gcloud iam service-accounts describe "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" >/dev/null || \
-        (echo "Service account not found, creating..." && \
-        gcloud iam service-accounts create "$SERVICE_ACCOUNT" \
-            --project="$PROJECT_ID" \
-            --display-name="GitHub Actions CD Service Account" --no-user-output-enabled)
+if ! gcloud iam service-accounts describe "$SERVICE_ACCOUNT@$PROJECT_ID.iam.gserviceaccount.com" --project="$PROJECT_ID" >/dev/null 2>&1; then
+    echo "Service account not found, creating..."
+    gcloud iam service-accounts create "$SERVICE_ACCOUNT" \
+        --project="$PROJECT_ID" \
+        --display-name="GitHub Actions CD Service Account" --no-user-output-enabled
+fi
 }
 
 # Grant the Service Account roles to deploy to Cloud Run
@@ -124,12 +125,13 @@ grant_roles() {
 # Create a Workload Identity Pool and Provider if they don't exist
 create_wif() {
     echo "Checking for Workload Identity Pool 'github-pool'..."
-    gcloud iam workload-identity-pools describe "github-pool" --project="$PROJECT_ID" --location="global" >/dev/null || \
-        (echo "Pool not found, creating..." && \
-        gcloud iam workload-identity-pools create "github-pool" \
-            --project="$PROJECT_ID" \
-            --location="global" \
-            --display-name="GitHub Actions Pool" --no-user-output-enabled)
+if ! gcloud iam workload-identity-pools describe "github-pool" --project="$PROJECT_ID" --location="global" >/dev/null 2>&1; then
+    echo "Pool not found, creating..."
+    gcloud iam workload-identity-pools create "github-pool" \
+        --project="$PROJECT_ID" \
+        --location="global" \
+        --display-name="GitHub Actions Pool" --no-user-output-enabled
+fi
 
     POOL_ID=$(gcloud iam workload-identity-pools describe "github-pool" --project="$PROJECT_ID" --location="global" --format="value(name)")
     if [ -z "$POOL_ID" ]; then
@@ -138,15 +140,16 @@ create_wif() {
     fi
 
     echo "Checking for Workload Identity Provider '$PROVIDER_ID'..."
-    gcloud iam workload-identity-pools providers describe "$PROVIDER_ID" --project="$PROJECT_ID" --location="global" --workload-identity-pool="github-pool" >/dev/null || \
-        (echo "Provider not found, creating..." && \
-        gcloud iam workload-identity-pools providers create-oidc "$PROVIDER_ID" \
-            --project="$PROJECT_ID" \
-            --location="global" \
-            --workload-identity-pool="github-pool" \
-            --issuer-uri="https://token.actions.githubusercontent.com" \
-            --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
-            --attribute-condition="attribute.repository == '$REPO'" --no-user-output-enabled)
+if ! gcloud iam workload-identity-pools providers describe "$PROVIDER_ID" --project="$PROJECT_ID" --location="global" --workload-identity-pool="github-pool" >/dev/null 2>&1; then
+    echo "Provider not found, creating..."
+    gcloud iam workload-identity-pools providers create-oidc "$PROVIDER_ID" \
+        --project="$PROJECT_ID" \
+        --location="global" \
+        --workload-identity-pool="github-pool" \
+        --issuer-uri="https://token.actions.githubusercontent.com" \
+        --attribute-mapping="google.subject=assertion.sub,attribute.repository=assertion.repository" \
+        --attribute-condition="attribute.repository == '$REPO'" --no-user-output-enabled
+fi
 }
 
 # Allow authentications from your GitHub repo's production environment
