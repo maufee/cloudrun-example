@@ -112,8 +112,9 @@ grant_roles() {
             --display-name="Cloud Build Service Account" --no-user-output-enabled
     fi
 
-    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/cloudbuild.builds.builder"
-    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/run.admin"
+    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/artifactregistry.writer"
+    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/run.developer"
+    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/iam.serviceAccountUser"
 
     echo "Granting Cloud Build service account permission to use other services..."
     local CLOUD_BUILD_SA="$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')@cloudbuild.gserviceaccount.com"
