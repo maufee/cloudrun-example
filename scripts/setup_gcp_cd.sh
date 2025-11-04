@@ -99,6 +99,7 @@ grant_roles() {
     grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "roles/artifactregistry.writer"
     grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "roles/cloudbuild.builds.editor"
     grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "roles/storage.admin"
+    grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "roles/serviceusage.serviceUsageConsumer"
 
     # Create a dedicated service account for Cloud Build
     local BUILD_SA="cloud-build-sa"
