@@ -132,6 +132,7 @@ grant_roles() {
     grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/artifactregistry.writer"
     grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "projects/$PROJECT_ID/roles/$CUSTOM_ROLE"
     grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/iam.serviceAccountUser"
+    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/storage.objectViewer"
 
     # Clean up old, overly permissive roles
     remove_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/run.developer"
