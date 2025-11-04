@@ -61,3 +61,4 @@ jobs:
           region: us-west1 # Or your preferred region
           source: .
           project_id: ${{ secrets.GCP_PROJECT_ID }}
+          flags: "--build-service-account=cloud-build-sa@${{ secrets.GCP_PROJECT_ID }}.iam.gserviceaccount.com"
