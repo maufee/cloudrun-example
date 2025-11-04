@@ -220,7 +220,11 @@ To enable Continuous Deployment, you need to perform a one-time setup in your Go
 > **Prerequisites:** Before you begin, ensure you have the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) installed and updated (`gcloud components update`). You must also be authenticated (`gcloud auth login`) with a user or principal that has sufficient permissions in the GCP project (e.g., `Owner` or `Editor` roles). The setup script requires a Unix-like environment (like Linux, macOS, or WSL on Windows).
 1. **In your Google Cloud Project:**
 
-A helper script is provided to automate the creation of the necessary GCP resources (Service Account, Workload Identity Federation, IAM bindings).
+A helper script is provided to automate the creation of the necessary GCP resources. The script is idempotent and will only create resources that don't already exist. It creates:
+- A **CD Service Account** (`github-cd-sa`) for GitHub Actions to authenticate with Google Cloud.
+- A **Build Service Account** (`cloud-build-sa`) for Cloud Build to use when executing the build.
+- A **Custom IAM Role** (`githubCdDeployer`) with the minimum necessary permissions to deploy a new version of a Cloud Run service.
+- All necessary **IAM Role Bindings** to connect the service accounts, the custom role, and the GitHub Actions workflow.
 
   -  **Configure environment variables:** Before running the script, export the following environment variables in your terminal:
       ```bash
@@ -253,6 +257,9 @@ The script will output the exact names and values for the three secrets you need
 ├── Procfile            # Production start command used by Cloud Run (gunicorn)
 ├── pyproject.toml      # Project definition and development dependencies for `uv`
 ├── requirements.txt    # Pinned dependencies for production (used by buildpacks)
+├── scripts/
+│   ├── setup_gcp_cd.sh   # Automates one-time GCP setup for the CD pipeline
+│   └── sync-deps.sh      # Syncs dependencies and generates requirements.txt
 ├── LICENSE             # MIT license
 └── README.md           # This file
 ```

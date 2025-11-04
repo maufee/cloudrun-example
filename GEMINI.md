@@ -2,14 +2,22 @@
 
 ## Project Overview
 - **Description:** A simple Python Flask web application created to serve as a "Hello World" example for deployment to Google Cloud Run.
-- **Status:** The application is complete and deployed.
+- **Status:** The application is complete and deployed, with a robust, secure, and automated CI/CD pipeline.
 
-## Deployment Details
-- **Platform:** Google Cloud Run
-- **Project ID:** `culture-guide`
-- **Region:** `us-west1`
-- **Service Name:** `gemini-cloudrun-app`
+## CI/CD Pipeline
+- **Platform:** GitHub Actions
+- **Trigger:** Pushes to the `main` branch.
+- **Jobs:**
+    1.  `test-and-lint`: Runs `ruff` and `pytest` to ensure code quality.
+    2.  `deploy`: On success, deploys the application to Google Cloud Run.
+- **Authentication:** Uses Workload Identity Federation for secure, keyless authentication between GitHub Actions and Google Cloud.
 - **Deployment Method:** Source-based deployment using Google Cloud Buildpacks.
+
+## GCP Infrastructure (Managed by `scripts/setup_gcp_cd.sh`)
+- **`github-cd-sa`:** A dedicated IAM Service Account for the GitHub Actions workflow to authenticate with GCP.
+- **`cloud-build-sa`:** A dedicated IAM Service Account for the Cloud Build process to execute the build and deployment, following the principle of least privilege.
+- **`githubCdDeployer`:** A custom IAM role with the minimal permissions required to deploy a new version of a Cloud Run service (`run.services.get`, `run.services.update`).
+- **Workload Identity Federation:** A pool and provider are configured to trust the GitHub Actions OIDC provider.
 
 ## Technical Stack
 - **Language:** Python 3.13
@@ -21,8 +29,7 @@
 
 ## Key Decisions & History
 - The project started as a basic Flask app.
-- The user specifically requested to upgrade the project to use a production-grade server, leading to the introduction of **Gunicorn** and the `Procfile`.
-- The user inquired about modern Python tooling, leading to the adoption of **`uv`** and `pyproject.toml` for dependency management.
-- We discussed more advanced topics, but deferred implementation:
-    - **Dockerfiles:** Decided that source deployment is sufficient for now.
-    - **Private Dependencies:** Discussed strategies (vendoring, private git repos, Artifact Registry) but did not implement them.
+- A full CI/CD pipeline was built using GitHub Actions and Google Cloud Run.
+- An idempotent setup script (`scripts/setup_gcp_cd.sh`) was developed to automate the creation of all necessary GCP resources.
+- The principle of least privilege was followed, resulting in the creation of two dedicated service accounts and a custom IAM role with minimal permissions.
+- After extensive debugging of IAM permissions, the final, working configuration was achieved by granting the correct roles to the correct service accounts, particularly for the Cloud Build and Cloud Run services.
