@@ -134,11 +134,6 @@ grant_roles() {
     grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/iam.serviceAccountUser"
     grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/storage.objectViewer"
 
-    # Clean up old, overly permissive roles
-    remove_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/run.developer"
-    remove_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/cloudbuild.builds.builder"
-    remove_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/run.admin"
-
     echo "Granting Cloud Build service account permission to use other services..."
     local CLOUD_BUILD_SA="$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')@cloudbuild.gserviceaccount.com"
     grant_project_iam_binding "serviceAccount:$CLOUD_BUILD_SA" "roles/serviceusage.serviceUsageConsumer"
