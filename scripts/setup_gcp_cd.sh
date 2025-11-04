@@ -113,7 +113,7 @@ grant_roles() {
     fi
 
     grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/artifactregistry.writer"
-    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/run.developer"
+    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "projects/$PROJECT_ID/roles/$CUSTOM_ROLE"
     grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/iam.serviceAccountUser"
 
     echo "Granting Cloud Build service account permission to use other services..."
