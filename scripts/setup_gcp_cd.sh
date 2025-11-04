@@ -43,6 +43,22 @@ grant_project_iam_binding() {
     fi
 }
 
+# Function to idempotently remove a project-level IAM role.
+remove_project_iam_binding() {
+    local member=$1
+    local role=$2
+
+    echo "Ensuring project role '$role' is removed from '$member'..."
+    local check
+    check=$(gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings" --filter="bindings.role = '$role' AND bindings.members = '$member' AND NOT bindings.condition" --format="value(bindings.role)")
+    if [ -n "$check" ]; then
+        gcloud projects remove-iam-policy-binding "$PROJECT_ID" \
+            --member="$member" \
+            --role="$role" \
+            --condition=None --no-user-output-enabled > /dev/null
+    fi
+}
+
 # Function to idempotently grant a role on a service account.
 grant_sa_iam_binding() {
     local sa_email=$1
@@ -112,9 +128,11 @@ grant_roles() {
             --display-name="Cloud Build Service Account" --no-user-output-enabled
     fi
 
+    # Grant least-privilege roles to the build service account
     grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/artifactregistry.writer"
-    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/run.developer"
+    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "projects/$PROJECT_ID/roles/$CUSTOM_ROLE"
     grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/iam.serviceAccountUser"
+    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/storage.objectViewer"
 
     echo "Granting Cloud Build service account permission to use other services..."
     local CLOUD_BUILD_SA="$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')@cloudbuild.gserviceaccount.com"
