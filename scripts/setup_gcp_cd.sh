@@ -117,6 +117,9 @@ grant_roles() {
     echo "Setting dedicated Cloud Build SA as the project default..."
     gcloud config set builds/service_account "$BUILD_SA_EMAIL"
 
+    echo "Setting dedicated Cloud Build SA as the project default..."
+    gcloud config set builds/service_account "$BUILD_SA_EMAIL"
+
     echo "Granting Cloud Build service account permission to use other services..."
     local CLOUD_BUILD_SA="$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')@cloudbuild.gserviceaccount.com"
     grant_project_iam_binding "serviceAccount:$CLOUD_BUILD_SA" "roles/serviceusage.serviceUsageConsumer"
