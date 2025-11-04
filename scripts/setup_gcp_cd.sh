@@ -99,6 +99,7 @@ grant_roles() {
     grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "roles/artifactregistry.writer"
     grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "roles/cloudbuild.builds.editor"
     grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "roles/storage.admin"
+    grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "roles/serviceusage.serviceUsageConsumer"
 
     # Create a dedicated service account for Cloud Build
     local BUILD_SA="cloud-build-sa"
@@ -111,7 +112,8 @@ grant_roles() {
             --display-name="Cloud Build Service Account" --no-user-output-enabled
     fi
 
-    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/run.admin"
+    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/artifactregistry.writer"
+    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/run.developer"
     grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/iam.serviceAccountUser"
 
     echo "Granting Cloud Build service account permission to use other services..."
