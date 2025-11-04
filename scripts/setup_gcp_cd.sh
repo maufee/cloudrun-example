@@ -96,6 +96,27 @@ grant_roles() {
     fi
 
     grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "projects/$PROJECT_ID/roles/$CUSTOM_ROLE"
+    grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "roles/artifactregistry.writer"
+    grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "roles/cloudbuild.builds.editor"
+    grant_project_iam_binding "serviceAccount:$CD_SA_EMAIL" "roles/storage.admin"
+
+    # Create a dedicated service account for Cloud Build
+    local BUILD_SA="cloud-build-sa"
+    local BUILD_SA_EMAIL="$BUILD_SA@$PROJECT_ID.iam.gserviceaccount.com"
+    echo "Checking for Cloud Build service account: $BUILD_SA"
+    if ! gcloud iam service-accounts describe "$BUILD_SA_EMAIL" --project="$PROJECT_ID" >/dev/null 2>&1; then
+        echo "Service account not found, creating..."
+        gcloud iam service-accounts create "$BUILD_SA" \
+            --project="$PROJECT_ID" \
+            --display-name="Cloud Build Service Account" --no-user-output-enabled
+    fi
+
+    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/run.admin"
+    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/iam.serviceAccountUser"
+
+    echo "Granting Cloud Build service account permission to use other services..."
+    local CLOUD_BUILD_SA="$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')@cloudbuild.gserviceaccount.com"
+    grant_project_iam_binding "serviceAccount:$CLOUD_BUILD_SA" "roles/serviceusage.serviceUsageConsumer"
 
     echo "Granting permission to impersonate the Cloud Run runtime service account..."
     local PROJECT_NUMBER
@@ -132,6 +153,7 @@ grant_roles() {
       fi
     fi
     grant_sa_iam_binding "$RUNTIME_SA_EMAIL" "serviceAccount:$CD_SA_EMAIL" "roles/iam.serviceAccountUser"
+    grant_sa_iam_binding "$RUNTIME_SA_EMAIL" "serviceAccount:$CLOUD_BUILD_SA" "roles/iam.serviceAccountUser"
 }
 
 # Create a Workload Identity Pool and Provider if they don't exist
