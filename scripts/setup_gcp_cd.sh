@@ -111,20 +111,8 @@ grant_roles() {
             --display-name="Cloud Build Service Account" --no-user-output-enabled
     fi
 
+    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/cloudbuild.builds.builder"
     grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/run.admin"
-    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/iam.serviceAccountUser"
-    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/serviceusage.serviceUsageConsumer"
-
-    echo "Waiting 10 seconds for IAM changes to propagate..."
-    sleep 10
-
-    echo "Verifying 'roles/serviceusage.serviceUsageConsumer' is granted to 'serviceAccount:$BUILD_SA_EMAIL'..."
-    local check_propagation
-    check_propagation=$(gcloud projects get-iam-policy "$PROJECT_ID" --flatten="bindings" --filter="bindings.role = 'roles/serviceusage.serviceUsageConsumer' AND bindings.members = 'serviceAccount:$BUILD_SA_EMAIL' AND NOT bindings.condition" --format="value(bindings.role)")
-    if [ -z "$check_propagation" ]; then
-        echo "Error: 'roles/serviceusage.serviceUsageConsumer' did not propagate to 'serviceAccount:$BUILD_SA_EMAIL' after delay." >&2
-        exit 1
-    fi
 
     echo "Granting Cloud Build service account permission to use other services..."
     local CLOUD_BUILD_SA="$(gcloud projects describe $PROJECT_ID --format='value(projectNumber)')@cloudbuild.gserviceaccount.com"
