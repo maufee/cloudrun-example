@@ -112,10 +112,8 @@ grant_roles() {
     fi
 
     grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/run.admin"
-    grant_project_iam_binding "serviceAccount:$BUILD_SA_EMAIL" "roles/iam.serviceAccountUser"
-
     echo "Setting dedicated Cloud Build SA as the project default..."
-    gcloud config set builds/service_account "$BUILD_SA_EMAIL"
+    gcloud alpha builds settings update --service-account="$BUILD_SA_EMAIL"
 
     echo "Setting dedicated Cloud Build SA as the project default..."
     gcloud config set builds/service_account "$BUILD_SA_EMAIL"
