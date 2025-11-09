@@ -1,50 +1,32 @@
-# [PROJECT_NAME] Constitution
-<!-- Example: Spec Constitution, TaskFlow Constitution, etc. -->
+# Python Flask Web App on Google Cloud Run Constitution
 
 ## Core Principles
 
-### [PRINCIPLE_1_NAME]
-<!-- Example: I. Library-First -->
-[PRINCIPLE_1_DESCRIPTION]
-<!-- Example: Every feature starts as a standalone library; Libraries must be self-contained, independently testable, documented; Clear purpose required - no organizational-only libraries -->
+### I. Production-Ready Deployment
+Every change MUST be suitable for a production deployment on Google Cloud Run. The application MUST use `gunicorn` for production serving, configured via a `Procfile`. Source-based deployment via Cloud Buildpacks is the standard method.
 
-### [PRINCIPLE_2_NAME]
-<!-- Example: II. CLI Interface -->
-[PRINCIPLE_2_DESCRIPTION]
-<!-- Example: Every library exposes functionality via CLI; Text in/out protocol: stdin/args → stdout, errors → stderr; Support JSON + human-readable formats -->
+### II. Robust Dependency Management
+Project dependencies MUST be managed using `uv`. Local development environments are defined by `pyproject.toml` and locked with `uv.lock`. Production dependencies for Cloud Run MUST be generated into `requirements.txt` from the locked configuration to ensure consistency.
 
-### [PRINCIPLE_3_NAME]
-<!-- Example: III. Test-First (NON-NEGOTIABLE) -->
-[PRINCIPLE_3_DESCRIPTION]
-<!-- Example: TDD mandatory: Tests written → User approved → Tests fail → Then implement; Red-Green-Refactor cycle strictly enforced -->
+### III. Mandatory Quality Gates
+All code MUST pass linting with `ruff` and testing with `pytest` before being merged. Test coverage MUST meet the minimum threshold defined in `pyproject.toml`. Tests SHOULD include timeouts to prevent indefinite runs in CI.
 
-### [PRINCIPLE_4_NAME]
-<!-- Example: IV. Integration Testing -->
-[PRINCIPLE_4_DESCRIPTION]
-<!-- Example: Focus areas requiring integration tests: New library contract tests, Contract changes, Inter-service communication, Shared schemas -->
+### IV. Automated CI/CD
+The project MUST maintain a fully automated Continuous Integration (CI) and Continuous Deployment (CD) pipeline using GitHub Actions. All pushes to the `main` branch that pass CI checks MUST be automatically deployed to production.
 
-### [PRINCIPLE_5_NAME]
-<!-- Example: V. Observability, VI. Versioning & Breaking Changes, VII. Simplicity -->
-[PRINCIPLE_5_DESCRIPTION]
-<!-- Example: Text I/O ensures debuggability; Structured logging required; Or: MAJOR.MINOR.BUILD format; Or: Start simple, YAGNI principles -->
+### V. Security First
+Development practices MUST prioritize security. Flask's debug mode MUST NEVER be enabled in a production environment. All security warnings and best practices mentioned in the documentation are non-negotiable.
 
-## [SECTION_2_NAME]
-<!-- Example: Additional Constraints, Security Requirements, Performance Standards, etc. -->
+## Development and Deployment Standards
 
-[SECTION_2_CONTENT]
-<!-- Example: Technology stack requirements, compliance standards, deployment policies, etc. -->
+Local development SHOULD use the Flask development server with debug mode enabled for productivity. The production environment MUST be mimicked locally using `gunicorn`. Deployment to Google Cloud Run is performed using the `gcloud run deploy --source .` command, which relies on the `Procfile` and `requirements.txt`.
 
-## [SECTION_3_NAME]
-<!-- Example: Development Workflow, Review Process, Quality Gates, etc. -->
+## Contribution Workflow
 
-[SECTION_3_CONTENT]
-<!-- Example: Code review requirements, testing gates, deployment approval process, etc. -->
+Contributions MUST follow a fork-and-pull-request workflow. All changes MUST be submitted via a pull request from a feature branch on a personal fork to the `main` branch of the upstream repository. CI checks must pass before a pull request can be reviewed and merged.
 
 ## Governance
-<!-- Example: Constitution supersedes all other practices; Amendments require documentation, approval, migration plan -->
 
-[GOVERNANCE_RULES]
-<!-- Example: All PRs/reviews must verify compliance; Complexity must be justified; Use [GUIDANCE_FILE] for runtime development guidance -->
+This constitution is the source of truth for project standards and practices. All code contributions, reviews, and architectural decisions MUST adhere to the principles outlined herein. Amendments to this constitution require a pull request, discussion, and approval from project maintainers.
 
-**Version**: [CONSTITUTION_VERSION] | **Ratified**: [RATIFICATION_DATE] | **Last Amended**: [LAST_AMENDED_DATE]
-<!-- Example: Version: 2.1.1 | Ratified: 2025-06-13 | Last Amended: 2025-07-16 -->
+**Version**: 1.0.0 | **Ratified**: 2025-11-09 | **Last Amended**: 2025-11-09
