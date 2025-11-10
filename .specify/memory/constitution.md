@@ -17,6 +17,9 @@ The project MUST maintain a fully automated Continuous Integration (CI) and Cont
 ### V. Security First
 Development practices MUST prioritize security. Flask's debug mode MUST NEVER be enabled in a production environment. All security warnings and best practices mentioned in the documentation are non-negotiable.
 
+### VI. Infrastructure as Code
+All project infrastructure MUST be managed declaratively using version-controlled code. The Terraform CDK for Python is the designated tool for this purpose. Manual infrastructure changes are prohibited.
+
 ## Development and Deployment Standards
 
 Local development SHOULD use the Flask development server with debug mode enabled for productivity. The production environment MUST be mimicked locally using `gunicorn`. Deployment to Google Cloud Run is performed using the `gcloud run deploy --source .` command, which relies on the `Procfile` and `requirements.txt`.
@@ -29,4 +32,4 @@ Contributions MUST follow a fork-and-pull-request workflow. All changes MUST be 
 
 This constitution is the source of truth for project standards and practices. All code contributions, reviews, and architectural decisions MUST adhere to the principles outlined herein. Amendments to this constitution require a pull request, discussion, and approval from project maintainers.
 
-**Version**: 1.0.0 | **Ratified**: 2025-11-09 | **Last Amended**: 2025-11-09
+**Version**: 1.1.0 | **Ratified**: 2025-11-09 | **Last Amended**: 2025-11-09
