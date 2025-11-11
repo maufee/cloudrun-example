@@ -138,6 +138,7 @@ class MyStack(TerraformStack):
             "roles/cloudbuild.builds.editor",
             "roles/storage.admin",
             "roles/serviceusage.serviceUsageConsumer",
+            "roles/iam.serviceAccountUser",  # Add this
             custom_role_full_name,
         ]
         for _i, role in enumerate(github_cd_sa_roles):
@@ -168,20 +169,8 @@ class MyStack(TerraformStack):
 
 
         # Grant serviceAccountUser role on runtime SA
-        ServiceAccountIamMember(
-            self,
-            "github-cd-sa-runtime-sa-iam",
-            service_account_id=runtime_sa_email,
-            role="roles/iam.serviceAccountUser",
-            member=github_cd_sa.member,
-        )
-        ServiceAccountIamMember(
-            self,
-            "cloud-build-sa-runtime-sa-iam",
-            service_account_id=runtime_sa_email,
-            role="roles/iam.serviceAccountUser",
-            member=cloud_build_sa.member,
-        )
+
+
 
         # Grant workloadIdentityUser role to the WIF principal
         ServiceAccountIamMember(
