@@ -158,11 +158,7 @@ class MyStack(TerraformStack):
                 project=project_id,
                 role=role,
                 member=cloud_build_sa.member,
-            )
-
-
-
-        runtime_sa_full_name = (
+            )        runtime_sa_full_name = (
             f"projects/{project_id}/serviceAccounts/{runtime_sa_email}"
         )
 
