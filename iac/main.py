@@ -131,7 +131,7 @@ class MyStack(TerraformStack):
         github_cd_sa_roles = [
             "roles/artifactregistry.writer",
             "roles/cloudbuild.builds.editor",
-            "roles/storage.objectCreator",
+            "roles/storage.admin",
             "roles/serviceusage.serviceUsageConsumer",
             custom_role_full_name,
         ]
@@ -147,7 +147,6 @@ class MyStack(TerraformStack):
         # Grant project-level IAM roles to cloud-build-sa
         cloud_build_sa_roles = [
             "roles/artifactregistry.writer",
-            "roles/iam.serviceAccountUser",
             "roles/storage.objectViewer",
             custom_role_full_name,
         ]
