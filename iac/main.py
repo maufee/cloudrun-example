@@ -92,7 +92,11 @@ class MyStack(TerraformStack):
             description=(
                 "Minimal permissions for deploying to Cloud Run via GitHub Actions"
             ),
-            permissions=["run.services.get", "run.services.update", "run.services.create"],
+            permissions=[
+                "run.services.get",
+                "run.services.update",
+                "run.services.create",
+            ],
             stage="GA",
             project=project_id,
             depends_on=[enabled_apis["iam.googleapis.com"]],
