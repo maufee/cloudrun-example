@@ -165,22 +165,20 @@ class MyStack(TerraformStack):
                 member=cloud_build_sa.member,
             )
 
-        runtime_sa_full_name = (
-            f"projects/{project_id}/serviceAccounts/{runtime_sa_email}"
-        )
+
 
         # Grant serviceAccountUser role on runtime SA
         ServiceAccountIamMember(
             self,
             "github-cd-sa-runtime-sa-iam",
-            service_account_id=runtime_sa_full_name,
+            service_account_id=runtime_sa_email,
             role="roles/iam.serviceAccountUser",
             member=github_cd_sa.member,
         )
         ServiceAccountIamMember(
             self,
             "cloud-build-sa-runtime-sa-iam",
-            service_account_id=runtime_sa_full_name,
+            service_account_id=runtime_sa_email,
             role="roles/iam.serviceAccountUser",
             member=cloud_build_sa.member,
         )
