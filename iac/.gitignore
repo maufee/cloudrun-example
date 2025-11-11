@@ -1,0 +1,8 @@
+.terraform/
+cdktf.out/
+terraform.tfstate*
+imports/
+uv.lock
+iac.egg-info/
+terraform.iac.tfstate
+terraform.iac.tfstate.backup

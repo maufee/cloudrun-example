@@ -215,38 +215,45 @@ This project is configured for Continuous Deployment to Google Cloud Run using G
 
 ### One-Time Setup for CD
 
-To enable Continuous Deployment, you need to perform a one-time setup in your Google Cloud project and GitHub repository.
+To enable Continuous Deployment, you need to perform a one-time setup in your Google Cloud project and GitHub repository. This is now managed via an Infrastructure as Code (IaC) approach using the Terraform CDK.
 
-> **Prerequisites:** Before you begin, ensure you have the [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) installed and updated (`gcloud components update`). You must also be authenticated (`gcloud auth login`) with a user or principal that has sufficient permissions in the GCP project (e.g., `Owner` or `Editor` roles). The setup script requires a Unix-like environment (like Linux, macOS, or WSL on Windows).
-1. **In your Google Cloud Project:**
+> **Prerequisites:** Before you begin, ensure you have the following tools installed:
+> - [Node.js and npm](https://nodejs.org/)
+> - [Google Cloud SDK](https://cloud.google.com/sdk/docs/install) (`gcloud`)
+> - [Python 3.13+](https://www.python.org/)
+> - `uv` (follow the [official installation guide](https://github.com/astral-sh/uv))
+> - `cdktf-cli` (install with `npm install -g cdktf-cli`)
 
-A helper script is provided to automate the creation of the necessary GCP resources. The script is idempotent and will only create resources that don't already exist. It creates:
-- A **CD Service Account** (`github-cd-sa`) for GitHub Actions to authenticate with Google Cloud.
-- A **Build Service Account** (`cloud-build-sa`) for Cloud Build to use when executing the build.
-- A **Custom IAM Role** (`githubCdDeployer`) with the minimum necessary permissions to deploy a new version of a Cloud Run service.
-- All necessary **IAM Role Bindings** to connect the service accounts, the custom role, and the GitHub Actions workflow.
+> **Cross-Platform Note:** The `validate.sh` script uses the `sha256sum` command. On macOS, you may need to install `coreutils` (e.g., via `brew install coreutils`) to get this command, or you can replace it with `shasum -a 256`.
 
-  -  **Configure environment variables:** Before running the script, export the following environment variables in your terminal:
-      ```bash
-      export PROJECT_ID="your-gcp-project-id" # Replace with your Google Cloud Project ID
-      export REPO="your-github-username/your-repo-name" # Replace with your GitHub repository (e.g., "octocat/Spoon-Knife")
-      # export SERVICE_ACCOUNT="my-custom-sa" # Optional: defaults to "github-cd-sa"
-      # export GCP_RUNTIME_SA="your-run-sa@your-gcp-project-id.iam.gserviceaccount.com" # Optional: The runtime SA for your Cloud Run service. If not set, the script defaults to using the project's Compute Engine default service account.
-      ```
-  -  **Run the script:** Make the script executable and then run it:
-      ```bash
-      chmod +x ./scripts/setup_gcp_cd.sh
-      ./scripts/setup_gcp_cd.sh
-      ```
+1. **Authenticate with Google Cloud:**
+   ```bash
+   gcloud auth login
+   ```
 
-2. **In your GitHub Repository Settings:**
+2. **Configure Environment Variables:**
+   The IaC script requires your GCP Project ID and GitHub repository details. Export them as environment variables:
+   ```bash
+   export PROJECT_ID="YOUR_GCP_PROJECT_ID" # Replace with your Google Cloud Project ID
+   export REPO="YOUR_GITHUB_USERNAME/YOUR_REPO_NAME" # Replace with your GitHub repository (e.g., "octocat/Spoon-Knife")
+   # export GCP_RUNTIME_SA="your-run-sa@your-gcp-project-id.iam.gserviceaccount.com" # Optional: The runtime SA for your Cloud Run service.
+   ```
 
-The script will output the exact names and values for the three secrets you need to create.
+3. **Deploy the Infrastructure:**
+   Navigate to the `iac` directory and run the deployment command. This will synthesize the Python code into a Terraform plan and prompt you for confirmation before creating the resources.
+    ```bash
+    cd iac
+    uv run cdktf get
+    uv run cdktf deploy
+    ```
+   Enter `yes` to approve the deployment.
 
-1.  Go to **`Settings > Environments`** and click **`New environment`**.
-2.  Name it **`production`** and click **`Configure environment`**. (Note: This name must be exactly `production` for the CD workflow to authenticate.)
-3.  In the environment settings, find the **`Environment secrets`** section and click **`Add secret`** for each of the three secrets (`GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, and `GCP_SERVICE_ACCOUNT`).
-4.  Copy the values that were printed in your terminal from the final step of the setup script.
+4. **Configure GitHub Repository Secrets:**
+   After the `cdktf deploy` command successfully completes, it will display the names and values for the three secrets you need to create in your GitHub repository.
+   1.  Go to **`Settings > Environments`** and click **`New environment`**.
+   2.  Name it **`production`** and click **`Configure environment`**.
+   3.  In the environment settings, find the **`Environment secrets`** section and click **`Add secret`** for each of the three secrets (`GCP_PROJECT_ID`, `GCP_WORKLOAD_IDENTITY_PROVIDER`, and `GCP_SERVICE_ACCOUNT`).
+   4.  Copy the values from the `Outputs` section of the `cdktf deploy` command's terminal output.
 
 
 ## Project structure
@@ -257,8 +264,14 @@ The script will output the exact names and values for the three secrets you need
 ├── Procfile            # Production start command used by Cloud Run (gunicorn)
 ├── pyproject.toml      # Project definition and development dependencies for `uv`
 ├── requirements.txt    # Pinned dependencies for production (used by buildpacks)
+├── iac/                # Infrastructure as Code (Terraform CDK Python application)
+│   ├── .gitignore
+│   ├── cdktf.json
+│   ├── main.py
+│   ├── pyproject.toml
+│   ├── requirements.txt
+│   └── validate.sh
 ├── scripts/
-│   ├── setup_gcp_cd.sh   # Automates one-time GCP setup for the CD pipeline
 │   └── sync-deps.sh      # Syncs dependencies and generates requirements.txt
 ├── LICENSE             # MIT license
 └── README.md           # This file
