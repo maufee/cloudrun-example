@@ -131,7 +131,7 @@ class MyStack(TerraformStack):
         github_cd_sa_roles = [
             "roles/artifactregistry.writer",
             "roles/cloudbuild.builds.editor",
-            "roles/storage.admin",
+            "roles/storage.objectAdmin",
             "roles/serviceusage.serviceUsageConsumer",
             custom_role_full_name,
         ]
@@ -160,14 +160,7 @@ class MyStack(TerraformStack):
                 member=cloud_build_sa.member,
             )
 
-        # Grant serviceusage.serviceUsageConsumer to default cloud build sa
-        # ProjectIamMember(
-        #     self,
-        #     "default-cloud-build-sa-iam",
-        #     project=project_id,
-        #     role="roles/serviceusage.serviceUsageConsumer",
-        #     member=f"serviceAccount:{project.number}@cloudbuild.gserviceaccount.com",
-        # )
+
 
         runtime_sa_full_name = (
             f"projects/{project_id}/serviceAccounts/{runtime_sa_email}"

@@ -244,7 +244,6 @@ To enable Continuous Deployment, you need to perform a one-time setup in your Go
     ```bash
     cd iac
     uv pip compile pyproject.toml --output-file requirements.txt
-    uv pip install -r requirements.txt
     uv run cdktf get
     uv run cdktf deploy
     ```
