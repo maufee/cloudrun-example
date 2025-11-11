@@ -151,6 +151,7 @@ class MyStack(TerraformStack):
         # Grant project-level IAM roles to cloud-build-sa
         cloud_build_sa_roles = [
             "roles/artifactregistry.writer",
+            "roles/iam.serviceAccountUser",
             "roles/storage.objectViewer",
             custom_role_full_name,
         ]
