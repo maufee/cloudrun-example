@@ -135,7 +135,7 @@ class MyStack(TerraformStack):
             "roles/serviceusage.serviceUsageConsumer",
             custom_role_full_name,
         ]
-        for i, role in enumerate(github_cd_sa_roles):
+        for _i, role in enumerate(github_cd_sa_roles):
             ProjectIamMember(
                 self,
                 f"github-cd-sa-iam-{role.split('/')[-1].replace('.', '-')}",
@@ -151,14 +151,16 @@ class MyStack(TerraformStack):
             "roles/storage.objectViewer",
             custom_role_full_name,
         ]
-        for i, role in enumerate(cloud_build_sa_roles):
+        for _i, role in enumerate(cloud_build_sa_roles):
             ProjectIamMember(
                 self,
                 f"cloud-build-sa-iam-{role.split('/')[-1].replace('.', '-')}",
                 project=project_id,
                 role=role,
                 member=cloud_build_sa.member,
-            )        runtime_sa_full_name = (
+            )
+
+        runtime_sa_full_name = (
             f"projects/{project_id}/serviceAccounts/{runtime_sa_email}"
         )
 
