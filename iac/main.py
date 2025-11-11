@@ -33,7 +33,6 @@ class MyStack(TerraformStack):
 
         project_id = os.environ.get("PROJECT_ID")
         repo = os.environ.get("REPO")
-        gcp_runtime_sa = os.environ.get("GCP_RUNTIME_SA")
 
         if not project_id or not repo:
             raise ValueError("PROJECT_ID and REPO environment variables must be set")
@@ -57,15 +56,6 @@ class MyStack(TerraformStack):
             enabled_apis[api] = ProjectService(
                 self, f"enable-{api.replace('.', '-')}", service=api, project=project_id
             )
-
-        if gcp_runtime_sa:
-            if "@" not in gcp_runtime_sa or "." not in gcp_runtime_sa:
-                raise ValueError(
-                    "GCP_RUNTIME_SA must be a valid service account email address"
-                )
-            runtime_sa_email = gcp_runtime_sa
-        else:
-            runtime_sa_email = f"{project.number}-compute@developer.gserviceaccount.com"
 
         github_cd_sa = ServiceAccount(
             self,
