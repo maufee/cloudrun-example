@@ -133,7 +133,7 @@ class MyStack(TerraformStack):
 
         # Grant project-level IAM roles to github-cd-sa
         github_cd_sa_roles = [
-            "roles/artifactregistry.writer",
+            "roles/artifactregistry.admin",
             "roles/cloudbuild.builds.editor",
             "roles/storage.admin",
             "roles/serviceusage.serviceUsageConsumer",
