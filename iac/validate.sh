@@ -25,10 +25,11 @@ gcloud iam workload-identity-pools describe "github-pool" --project="${PROJECT_I
 echo "✅ 'github-pool' Workload Identity Pool exists."
 
 if command -v sha256sum >/dev/null 2>&1; then
-    PROVIDER_ID="gh-p-$(echo -n "$REPO" | sha256sum | cut -c1-25)"
+    sha_cmd="sha256sum"
 else
-    PROVIDER_ID="gh-p-$(echo -n "$REPO" | shasum -a 256 | cut -c1-25)"
+    sha_cmd="shasum -a 256"
 fi
+PROVIDER_ID="gh-p-$(echo -n "$REPO" | $sha_cmd | cut -c1-25)"
 gcloud iam workload-identity-pools providers describe "${PROVIDER_ID}" --project="${PROJECT_ID}" --location="global" --workload-identity-pool="github-pool" >/dev/null
 echo "✅ Workload Identity Provider for repo '${REPO}' exists."
 

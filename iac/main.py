@@ -131,7 +131,7 @@ class MyStack(TerraformStack):
         github_cd_sa_roles = [
             "roles/artifactregistry.writer",
             "roles/cloudbuild.builds.editor",
-            "roles/storage.objectAdmin",
+            "roles/storage.objectCreator",
             "roles/serviceusage.serviceUsageConsumer",
             custom_role_full_name,
         ]
