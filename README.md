@@ -244,6 +244,7 @@ To enable Continuous Deployment, you need to perform a one-time setup in your Go
     ```bash
     cd iac
     uv run cdktf get
+    uv run cdktf synth
     uv run cdktf deploy
     ```
    Enter `yes` to approve the deployment.
