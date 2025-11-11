@@ -153,7 +153,7 @@ class MyStack(TerraformStack):
         cloud_build_sa_roles = [
             "roles/artifactregistry.writer",
             "roles/iam.serviceAccountUser",
-            "roles/storage.objectViewer",
+            "roles/storage.admin",
             custom_role_full_name,
         ]
         for _i, role in enumerate(cloud_build_sa_roles):
