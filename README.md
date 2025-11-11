@@ -243,7 +243,6 @@ To enable Continuous Deployment, you need to perform a one-time setup in your Go
    Navigate to the `iac` directory and run the deployment command. This will synthesize the Python code into a Terraform plan and prompt you for confirmation before creating the resources.
     ```bash
     cd iac
-    uv pip compile pyproject.toml --output-file requirements.txt
     uv run cdktf get
     uv run cdktf deploy
     ```
