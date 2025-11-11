@@ -138,7 +138,7 @@ class MyStack(TerraformStack):
         for i, role in enumerate(github_cd_sa_roles):
             ProjectIamMember(
                 self,
-                f"github-cd-sa-iam-{i}",
+                f"github-cd-sa-iam-{role.split('/')[-1].replace('.', '-')}",
                 project=project_id,
                 role=role,
                 member=github_cd_sa.member,
@@ -154,7 +154,7 @@ class MyStack(TerraformStack):
         for i, role in enumerate(cloud_build_sa_roles):
             ProjectIamMember(
                 self,
-                f"cloud-build-sa-iam-{i}",
+                f"cloud-build-sa-iam-{role.split('/')[-1].replace('.', '-')}",
                 project=project_id,
                 role=role,
                 member=cloud_build_sa.member,
