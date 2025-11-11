@@ -50,6 +50,7 @@ class MyStack(TerraformStack):
             "cloudresourcemanager.googleapis.com",
             "run.googleapis.com",
             "compute.googleapis.com",
+            "cloudbuild.googleapis.com",
         ]
         enabled_apis = {}
         for api in apis_to_enable:
